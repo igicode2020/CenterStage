@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.teleop;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -141,10 +141,10 @@ public class mainDrive extends LinearOpMode {
 //          Math.min is to make sure the powers aren't set to anything more than one for now
 //          Dividing by 28 to get a number between -1 and 1 (power percentage instead of ticks/sec)
 //          Multiply by -1 to reverse the direction of the robot
-                FLPower = (speed * Math.sin(direction + Math.PI / 4.0) - directionMultiplier * gamepad1.right_stick_x) * -1;
-                FRPower = -(speed * Math.cos(direction + Math.PI / 4.0) - directionMultiplier * gamepad1.right_stick_x) * -1;
-                BLPower = -(speed * Math.cos(direction + Math.PI / 4.0) + directionMultiplier * gamepad1.right_stick_x) * -1;
-                BRPower = (speed * Math.sin(direction + Math.PI / 4.0) + directionMultiplier * gamepad1.right_stick_x) * -1;
+                FLPower = (speed * Math.sin(direction + Math.PI / 4.0) - directionMultiplier * gamepad1.right_stick_x);
+                FRPower = -(speed * Math.cos(direction + Math.PI / 4.0) - directionMultiplier * gamepad1.right_stick_x);
+                BLPower = -(speed * Math.cos(direction + Math.PI / 4.0) + directionMultiplier * gamepad1.right_stick_x);
+                BRPower = (speed * Math.sin(direction + Math.PI / 4.0) + directionMultiplier * gamepad1.right_stick_x);
 
                 if (slugMode) {
                     FRPower = FRPower * slugMultiplier;
@@ -165,10 +165,10 @@ public class mainDrive extends LinearOpMode {
                     slugMode = !slugMode;
                 }
 
-                FRPower = (-gamepad1.left_stick_y - gamepad1.left_stick_x - directionMultiplier*gamepad1.right_stick_x) * -1;
-                BRPower = (-gamepad1.left_stick_y + gamepad1.left_stick_x - directionMultiplier*gamepad1.right_stick_x) * -1;
-                FLPower = (-gamepad1.left_stick_y + gamepad1.left_stick_x + directionMultiplier*gamepad1.right_stick_x) * -1;
-                BLPower = (-gamepad1.left_stick_y - gamepad1.left_stick_x + directionMultiplier*gamepad1.right_stick_x) * -1;
+                FRPower = (-gamepad1.left_stick_y - gamepad1.left_stick_x - directionMultiplier*gamepad1.right_stick_x);
+                BRPower = (-gamepad1.left_stick_y + gamepad1.left_stick_x - directionMultiplier*gamepad1.right_stick_x);
+                FLPower = (-gamepad1.left_stick_y + gamepad1.left_stick_x + directionMultiplier*gamepad1.right_stick_x);
+                BLPower = (-gamepad1.left_stick_y - gamepad1.left_stick_x + directionMultiplier*gamepad1.right_stick_x);
 
                 if (slugMode) {
                     FRPower = FRPower * slugMultiplier;
