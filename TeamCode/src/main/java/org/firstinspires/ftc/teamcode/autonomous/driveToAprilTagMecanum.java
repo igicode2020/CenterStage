@@ -52,7 +52,7 @@ import java.util.List;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list.
  */
-@TeleOp(name = "Concept: AprilTag", group = "Concept")
+@TeleOp(name = "April Tag Driving", group = "--")
 // @Disabled
 public class driveToAprilTagMecanum extends LinearOpMode {
 
@@ -70,7 +70,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
     private DcMotor FLM = null;
     private DcMotor BLM = null;
 
-    static public double[] values = new double[4];
+    static public double[] values = new double[3];
     static public int id = 1;
 
     @Override
@@ -89,12 +89,17 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         telemetry.update();
         waitForStart();
 
-        if (opModeIsActive()) {
             updateValues();
+            telemetry.addData("Hey", values[0]);
+            telemetry.addData("Hey", values[1]);
+            telemetry.addData("Hey", values[2]);
+            telemetry.update();
+            sleep(5000);
+            FRM.setPower(1);
+            BRM.setPower(1);
 //            double x = values[0];
 //            double y = values[1];
 //            double yaw = values[2];
-//            double bearing = values[3];
             //correct yaw to align robot parallel to backdrop
             while (values[2]>=1 || values[2]<=-1)
             {
@@ -118,7 +123,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
                 //TO DO scale direction and power to difference to desired distance
                 double speed = (values[0]-0)/5 + (values[1]-10)/5;
                 //TO DO make sure angles line up with wheel direction
-                double direction = values[3] * (Math.PI / 180);
+                double direction = Math.atan(values[0]/values[1]) * (Math.PI / 180);
                 FLM.setPower(speed*(Math.sin(direction + Math.PI / 4.0)));
                 FRM.setPower(speed*(Math.cos(direction + Math.PI / 4.0)));
                 BLM.setPower(speed*(Math.cos(direction + Math.PI / 4.0)));
@@ -127,10 +132,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
                 updateValues();
             }
         }
-        // Save more CPU resources when camera is no longer needed.
-        visionPortal.close();
-
-    }   // end method runOpMode()
 
     /**
      * Initialize the AprilTag processor.
@@ -190,7 +191,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         double x = 0;
         double y = 0;
         double yaw = 0;
-        double bearing = 0;
 
         // Step through the list of detections and display info for each one.
         for (AprilTagDetection detection : currentDetections) {
@@ -200,7 +200,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
                     x = detection.ftcPose.x;
                     y = detection.ftcPose.y;
                     yaw = detection.ftcPose.yaw;
-                    bearing = detection.ftcPose.bearing;
                     break;
                 }
             }
@@ -208,7 +207,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         values[0] = x;
         values[1] = y;
         values[2] = yaw;
-        values[3] = bearing;
 
     }   // end method updateValues()
 
