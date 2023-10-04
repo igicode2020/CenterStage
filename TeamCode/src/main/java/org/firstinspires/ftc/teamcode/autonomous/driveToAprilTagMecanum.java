@@ -88,50 +88,45 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         telemetry.addData(">", "Touch Play to start OpMode");
         telemetry.update();
         waitForStart();
-
+        while (opModeIsActive()) {
             updateValues();
             telemetry.addData("Hey", values[0]);
             telemetry.addData("Hey", values[1]);
             telemetry.addData("Hey", values[2]);
             telemetry.update();
-            sleep(5000);
-            FRM.setPower(1);
-            BRM.setPower(1);
 //            double x = values[0];
 //            double y = values[1];
 //            double yaw = values[2];
             //correct yaw to align robot parallel to backdrop
-            while (values[2]>=1 || values[2]<=-1)
-            {
+            while (values[2] >= 1 || values[2] <= -1) {
                 //TO DO add acceleration turning
-                if(values[2]>0){
-                    FRM.setPower(0.1);
-                    BRM.setPower(0.1);
-                    FLM.setPower(-0.1);
-                    BLM.setPower(-0.1);
-                }
-                else if(values[2]<0){
-                    FLM.setPower(0.1);
-                    BLM.setPower(0.1);
-                    FRM.setPower(-0.1);
-                    BRM.setPower(-0.1);
+                if (values[2] > 0) {
+                    FRM.setPower(0.5);
+                    BRM.setPower(0.5);
+                    FLM.setPower(-0.5);
+                    BLM.setPower(-0.5);
+                } else if (values[2] < 0) {
+                    FLM.setPower(0.5);
+                    BLM.setPower(0.5);
+                    FRM.setPower(-0.5);
+                    BRM.setPower(-0.5);
                 }
                 updateValues();
             }
-            while (values[0]!=0 && values[1]!=10)
-            {
+            while (values[0] != 0 && values[1] != 10) {
                 //TO DO scale direction and power to difference to desired distance
-                double speed = (values[0]-0)/5 + (values[1]-10)/5;
+                double speed = (values[0] - 0) / 5 + (values[1] - 10) / 5;
                 //TO DO make sure angles line up with wheel direction
-                double direction = Math.atan(values[0]/values[1]) * (Math.PI / 180);
-                FLM.setPower(speed*(Math.sin(direction + Math.PI / 4.0)));
-                FRM.setPower(speed*(Math.cos(direction + Math.PI / 4.0)));
-                BLM.setPower(speed*(Math.cos(direction + Math.PI / 4.0)));
-                BRM.setPower(speed*(Math.sin(direction + Math.PI / 4.0)));
-
+                double direction = Math.atan(values[0] / values[1]) * (Math.PI / 180);
+                FLM.setPower(speed * (Math.sin(direction + Math.PI / 4.0)));
+                FRM.setPower(speed * (Math.cos(direction + Math.PI / 4.0)));
+                BLM.setPower(speed * (Math.cos(direction + Math.PI / 4.0)));
+                BRM.setPower(speed * (Math.sin(direction + Math.PI / 4.0)));
                 updateValues();
-            }
+            }// Save more CPU resources when camera is no longer needed.
+            visionPortal.close();
         }
+    }
 
     /**
      * Initialize the AprilTag processor.
@@ -187,7 +182,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
     private void updateValues() {
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        double id = 0;
         double x = 0;
         double y = 0;
         double yaw = 0;
