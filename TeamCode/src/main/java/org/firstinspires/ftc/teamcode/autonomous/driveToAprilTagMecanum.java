@@ -123,43 +123,33 @@ public class driveToAprilTagMecanum extends LinearOpMode {
 //                }
 //                updateValues();
 //            }
-            while (values[0] >= 1 || values[0] <= -1) {
-                //TO DO make sure angles line up with wheel direction
-                double direction = Math.atan(values[0] / values[1]);
-                if (values[0] > 0) {
-                    FRM.setPower(0.1);
-                    BRM.setPower(-0.1);
-                    FLM.setPower(-0.1);
-                    BLM.setPower(0.1);
-                } else if (values[2] < 0) {
-                    FRM.setPower(-0.1);
-                    BRM.setPower(0.1);
-                    FLM.setPower(0.1);
-                    BLM.setPower(-0.1);
-                }
-                updateValues();
-                telemetry.addData("x", values[0]);
-                telemetry.addData("y", values[1]);
-                telemetry.addData("yaw", values[2]);
-                telemetry.addData("direction", direction);
-                telemetry.update();
-            }
                 FLM.setPower(0);
                 BLM.setPower(0);
                 FRM.setPower(0);
                 BRM.setPower(0);
-                while (values[1] >= 11 || values[1] <= 9) {
+                while (values[1] >= 11 || values[1] <= 9 || values[0] >= 1 || values[0] <= -1) {
                     //TO DO make sure angles line up with wheel direction
                     double direction = Math.atan(values[0] / values[1]);
-                    if (values[1] > 10) {
+                    if (values[1] < 10) {
                         FRM.setPower(0.1);
                         BRM.setPower(0.1);
                         FLM.setPower(0.1);
                         BLM.setPower(0.1);
-                    } else if (values[1] < 10) {
+                    } else if (values[1] > 10) {
                         FRM.setPower(-0.1);
                         BRM.setPower(-0.1);
                         FLM.setPower(-0.1);
+                        BLM.setPower(-0.1);
+                    }
+                    if (values[0] > 0) {
+                        FRM.setPower(0.1);
+                        BRM.setPower(-0.1);
+                        FLM.setPower(-0.1);
+                        BLM.setPower(0.1);
+                    } else if (values[2] < 0) {
+                        FRM.setPower(-0.1);
+                        BRM.setPower(0.1);
+                        FLM.setPower(0.1);
                         BLM.setPower(-0.1);
                     }
                     updateValues();
