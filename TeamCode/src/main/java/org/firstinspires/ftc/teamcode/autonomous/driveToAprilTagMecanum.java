@@ -81,6 +81,14 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         FLM = hardwareMap.get(DcMotorEx.class, "frontLeft");
         BLM = hardwareMap.get(DcMotorEx.class, "backLeft");
 
+        FRM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        BRM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
+        BRM.setDirection(DcMotorEx.Direction.REVERSE);
+        FRM.setDirection(DcMotorEx.Direction.REVERSE);
+
         initAprilTag();
 
         // Wait for the DS start button to be touched.
@@ -88,44 +96,87 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         telemetry.addData(">", "Touch Play to start OpMode");
         telemetry.update();
         waitForStart();
-        while (opModeIsActive()) {
-            updateValues();
-            telemetry.addData("Hey", values[0]);
-            telemetry.addData("Hey", values[1]);
-            telemetry.addData("Hey", values[2]);
-            telemetry.update();
+
+        if (opModeIsActive()) {
+            while (opModeIsActive()) {
+                updateValues();
+                telemetry.addData("x", values[0]);
+                telemetry.addData("y", values[1]);
+                telemetry.addData("yaw", values[2]);
+                telemetry.update();
 //            double x = values[0];
 //            double y = values[1];
 //            double yaw = values[2];
-            //correct yaw to align robot parallel to backdrop
-            while (values[2] >= 1 || values[2] <= -1) {
-                //TO DO add acceleration turning
-                if (values[2] > 0) {
-                    FRM.setPower(0.5);
-                    BRM.setPower(0.5);
-                    FLM.setPower(-0.5);
-                    BLM.setPower(-0.5);
+                //correct yaw to align robot parallel to backdrop
+//            while (values[2] >= 2 || values[2] <= -2) {
+//                //TO DO add acceleration turning
+//                if (values[2] > 0) {
+//                    FRM.setPower(0.1);
+//                    BRM.setPower(0.1);
+//                    FLM.setPower(-0.1);
+//                    BLM.setPower(-0.1);
+//                } else if (values[2] < 0) {
+//                    FLM.setPower(0.1);
+//                    BLM.setPower(0.1);
+//                    FRM.setPower(-0.1);
+//                    BRM.setPower(-0.1);
+//                }
+//                updateValues();
+//            }
+            while (values[0] >= 1 || values[0] <= -1) {
+                //TO DO make sure angles line up with wheel direction
+                double direction = Math.atan(values[0] / values[1]);
+                if (values[0] > 0) {
+                    FRM.setPower(0.1);
+                    BRM.setPower(-0.1);
+                    FLM.setPower(-0.1);
+                    BLM.setPower(0.1);
                 } else if (values[2] < 0) {
-                    FLM.setPower(0.5);
-                    BLM.setPower(0.5);
-                    FRM.setPower(-0.5);
-                    BRM.setPower(-0.5);
+                    FRM.setPower(-0.1);
+                    BRM.setPower(0.1);
+                    FLM.setPower(0.1);
+                    BLM.setPower(-0.1);
                 }
                 updateValues();
+                telemetry.addData("x", values[0]);
+                telemetry.addData("y", values[1]);
+                telemetry.addData("yaw", values[2]);
+                telemetry.addData("direction", direction);
+                telemetry.update();
             }
-            while (values[0] != 0 && values[1] != 10) {
-                //TO DO scale direction and power to difference to desired distance
-                double speed = (values[0] - 0) / 5 + (values[1] - 10) / 5;
-                //TO DO make sure angles line up with wheel direction
-                double direction = Math.atan(values[0] / values[1]) * (Math.PI / 180);
-                FLM.setPower(speed * (Math.sin(direction + Math.PI / 4.0)));
-                FRM.setPower(speed * (Math.cos(direction + Math.PI / 4.0)));
-                BLM.setPower(speed * (Math.cos(direction + Math.PI / 4.0)));
-                BRM.setPower(speed * (Math.sin(direction + Math.PI / 4.0)));
-                updateValues();
-            }// Save more CPU resources when camera is no longer needed.
-            visionPortal.close();
+                FLM.setPower(0);
+                BLM.setPower(0);
+                FRM.setPower(0);
+                BRM.setPower(0);
+                while (values[1] >= 11 || values[1] <= 9) {
+                    //TO DO make sure angles line up with wheel direction
+                    double direction = Math.atan(values[0] / values[1]);
+                    if (values[1] > 10) {
+                        FRM.setPower(0.1);
+                        BRM.setPower(0.1);
+                        FLM.setPower(0.1);
+                        BLM.setPower(0.1);
+                    } else if (values[1] < 10) {
+                        FRM.setPower(-0.1);
+                        BRM.setPower(-0.1);
+                        FLM.setPower(-0.1);
+                        BLM.setPower(-0.1);
+                    }
+                    updateValues();
+                    telemetry.addData("x", values[0]);
+                    telemetry.addData("y", values[1]);
+                    telemetry.addData("yaw", values[2]);
+                    telemetry.addData("direction", direction);
+                    telemetry.update();
+                }
+            FLM.setPower(0);
+            BLM.setPower(0);
+            FRM.setPower(0);
+            BRM.setPower(0);
+            }
         }
+        // Save more CPU resources when camera is no longer needed.
+        visionPortal.close();
     }
 
     /**
