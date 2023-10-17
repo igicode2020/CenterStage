@@ -31,6 +31,8 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import android.util.Size;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -39,40 +41,37 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
-
-/*
- * This OpMode illustrates the basics of AprilTag recognition and pose estimation,
- * including Java Builder structures for specifying Vision parameters.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list.
- */
-@TeleOp(name = "April Tag Driving", group = "--")
+@Autonomous(name = "April Tag Driving", group = "--")
 // @Disabled
 public class driveToAprilTagMecanum extends LinearOpMode {
 
-    /**
-     * The variable to store our instance of the AprilTag processor.
-     */
+    //The variable to store our instance of the AprilTag processor.
     private AprilTagProcessor aprilTag;
 
-    /**
-     * The variable to store our instance of the vision portal.
-     */
+    //The variable to store our instance of the vision portal.
     private VisionPortal visionPortal;
     private DcMotor FRM = null;
     private DcMotor BRM = null;
     private DcMotor FLM = null;
     private DcMotor BLM = null;
 
+    //Our Array used to hold x, y, and yaw april tag values
     static public double[] values = new double[3];
     static public int id = 1;
 
+    //BNO055IMU is the orientation sensor
+    BNO055IMU imu;
+    Orientation lastAngles = new Orientation();
+    double globalAngle;
     @Override
     public void runOpMode() {
         //Map motors
@@ -89,6 +88,20 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         BRM.setDirection(DcMotorEx.Direction.REVERSE);
         FRM.setDirection(DcMotorEx.Direction.REVERSE);
 
+        // Setting parameters for imu
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.mode = BNO055IMU.SensorMode.IMU;
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.loggingEnabled = false;
+
+        // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
+        // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
+        // and named "imu".
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+
+        imu.initialize(parameters);
+
         initAprilTag();
 
         // Wait for the DS start button to be touched.
@@ -97,74 +110,70 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         telemetry.update();
         waitForStart();
 
-        if (opModeIsActive()) {
-            while (opModeIsActive()) {
-                updateValues();
-                telemetry.addData("x", values[0]);
-                telemetry.addData("y", values[1]);
-                telemetry.addData("yaw", values[2]);
-                telemetry.update();
-//            double x = values[0];
-//            double y = values[1];
-//            double yaw = values[2];
-                //correct yaw to align robot parallel to backdrop
-//            while (values[2] >= 2 || values[2] <= -2) {
-//                //TO DO add acceleration turning
-//                if (values[2] > 0) {
-//                    FRM.setPower(0.1);
-//                    BRM.setPower(0.1);
-//                    FLM.setPower(-0.1);
-//                    BLM.setPower(-0.1);
-//                } else if (values[2] < 0) {
-//                    FLM.setPower(0.1);
-//                    BLM.setPower(0.1);
-//                    FRM.setPower(-0.1);
-//                    BRM.setPower(-0.1);
-//                }
-//                updateValues();
+        updateValues();
+//      values[0] is the left and right alignment with april tag (x)
+//      values[1] is the distance to april tag (y)
+//      values[2] is the yaw of the robot to the april tag
+        int marginOfError = 1;
+        double desiredX = 0;
+        double desiredY = 10;
+        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY + marginOfError) {
+            double xPower = 0.1;
+            double yPower = 0.1;
+//            if(Math.abs(values[0]-desiredX) < 5){
+//                xPower = Math.abs(0.2);
 //            }
-                FLM.setPower(0);
-                BLM.setPower(0);
-                FRM.setPower(0);
-                BRM.setPower(0);
-                while (values[1] >= 11 || values[1] <= 9 || values[0] >= 1 || values[0] <= -1) {
-                    //TO DO make sure angles line up with wheel direction
-                    double direction = Math.atan(values[0] / values[1]);
-                    if (values[1] < 10) {
-                        FRM.setPower(0.1);
-                        BRM.setPower(0.1);
-                        FLM.setPower(0.1);
-                        BLM.setPower(0.1);
-                    } else if (values[1] > 10) {
-                        FRM.setPower(-0.1);
-                        BRM.setPower(-0.1);
-                        FLM.setPower(-0.1);
-                        BLM.setPower(-0.1);
-                    }
-                    if (values[0] > 0) {
-                        FRM.setPower(0.1);
-                        BRM.setPower(-0.1);
-                        FLM.setPower(-0.1);
-                        BLM.setPower(0.1);
-                    } else if (values[2] < 0) {
-                        FRM.setPower(-0.1);
-                        BRM.setPower(0.1);
-                        FLM.setPower(0.1);
-                        BLM.setPower(-0.1);
-                    }
-                    updateValues();
-                    telemetry.addData("x", values[0]);
-                    telemetry.addData("y", values[1]);
-                    telemetry.addData("yaw", values[2]);
-                    telemetry.addData("direction", direction);
-                    telemetry.update();
-                }
-            FLM.setPower(0);
-            BLM.setPower(0);
-            FRM.setPower(0);
-            BRM.setPower(0);
+//            if(Math.abs(values[1]-desiredY) < 5){
+//                yPower = Math.abs(0.2);
+//            }
+            //move side to side to adjust alignment with april tag (x)
+            if (values[0] > 0) {
+                FRM.setPower(xPower);
+                BRM.setPower(-xPower);
+                FLM.setPower(-xPower);
+                BLM.setPower(xPower);
             }
+            else if (values[0] < 0) {
+                FRM.setPower(-xPower);
+                BRM.setPower(xPower);
+                FLM.setPower(xPower);
+                BLM.setPower(-xPower);
+            }
+            //move forward or backward to adjust distance from april tag (y)
+            if (values[1] < 10) {
+                FRM.setPower(yPower);
+                BRM.setPower(yPower);
+                FLM.setPower(yPower);
+                BLM.setPower(yPower);
+            }
+            else if (values[1] > 10) {
+                FRM.setPower(-yPower);
+                BRM.setPower(-yPower);
+                FLM.setPower(-yPower);
+                BLM.setPower(-yPower);
+            }
+            updateValues();
+            telemetry.addData("x", values[0]);
+            telemetry.addData("y", values[1]);
+            telemetry.addData("yaw", values[2]);
+            telemetry.update();
         }
+        FLM.setPower(0);
+        BLM.setPower(0);
+        FRM.setPower(0);
+        BRM.setPower(0);
+//      Potential way to strafe directly to desired target:
+//        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY + marginOfError) {
+//            //Get direction and account for difference in heading values
+//            double direction = Math.atan(values[0]/values[1]) - 90;
+//            double FLPower = (0.1 * Math.sin(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            double FRPower = -(0.1 * Math.cos(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            double BLPower = -(0.1 * Math.cos(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            double BRPower = (0.1 * Math.sin(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            telemetry.addData("direction", direction);
+//            telemetry.update();
+//        }
+
         // Save more CPU resources when camera is no longer needed.
         visionPortal.close();
     }
@@ -173,7 +182,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
      * Initialize the AprilTag processor.
      */
     private void initAprilTag() {
-
         // Create the AprilTag processor.
         aprilTag = new AprilTagProcessor.Builder()
                 // == CAMERA CALIBRATION ==
@@ -194,12 +202,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         // Choose a camera resolution. Not all cameras support all resolutions.
         builder.setCameraResolution(new Size(640, 360));
 
-        // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
-        // builder.enableCameraMonitoring(true);
-
-        // Set the stream format; MJPEG uses less bandwidth than default YUY2.
-        //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
-
         // Choose whether or not LiveView stops if no processors are enabled.
         // If set "true", monitor shows solid orange screen if no processors enabled.
         // If set "false", monitor shows camera view without annotations.
@@ -210,12 +212,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
 
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
-
-        // Disable or re-enable the aprilTag processor at any time.
-        //visionPortal.setProcessorEnabled(aprilTag, true);
-
     }   // end method initAprilTag()
-
 
     /**
      * Add telemetry about AprilTag detections.
@@ -227,7 +224,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         double y = 0;
         double yaw = 0;
 
-        // Step through the list of detections and display info for each one.
+        // Set the x, y, and yaw for the specified ID
         for (AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null) {
                 //might be able to optimize this by not going through every detection
@@ -242,7 +239,57 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         values[0] = x;
         values[1] = y;
         values[2] = yaw;
-
     }   // end method updateValues()
 
+    /*determines the robot's heading based on it's initial start position:
+       straight ahead is 0 degrees, left is positive, right is negative
+    */
+    private double getAngle() {
+        /* We have to process the angle because the imu works in euler angles so the Z axis is
+           returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
+           180 degrees. We detect this transition and track the total cumulative angle of rotation. */
+
+        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
+
+        if (deltaAngle < -180)
+            deltaAngle += 360;
+        else if (deltaAngle > 180)
+            deltaAngle -= 360;
+
+        globalAngle += deltaAngle;
+
+        lastAngles = angles;
+
+        return globalAngle;
+    }
+
+    public void turn(double degrees) {
+        double currentAngle = getAngle();
+        double targetAngle = currentAngle + degrees;
+        double errorMargin = 1;
+        while (currentAngle < (targetAngle - errorMargin) || currentAngle > (targetAngle + errorMargin)) {
+            double motorPower = Math.abs(currentAngle-targetAngle)/30;
+            //TO DO: check turn direction
+            if (currentAngle < targetAngle - errorMargin) {
+                FLM.setPower(-motorPower);
+                BLM.setPower(-motorPower);
+                FRM.setPower(motorPower);
+                BRM.setPower(motorPower);
+            }
+            else if (currentAngle>targetAngle+errorMargin) {
+                FLM.setPower(motorPower);
+                BLM.setPower(motorPower);
+                FRM.setPower(-motorPower);
+                BRM.setPower(-motorPower);
+            }
+            telemetry.addData("TARGET ANGLE", targetAngle);
+            telemetry.addData("CURRENT ANGLE", getAngle());
+            telemetry.update();
+
+            //update currentAngle
+            currentAngle = getAngle();
+        }
+    }
 }   // end class
