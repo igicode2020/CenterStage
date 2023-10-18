@@ -66,7 +66,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
 
     //Our Array used to hold x, y, and yaw april tag values
     static public double[] values = new double[3];
-    static public int id = 1;
+    static public int id = 5;
 
     //BNO055IMU is the orientation sensor
     BNO055IMU imu;
@@ -109,6 +109,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         telemetry.addData(">", "Touch Play to start OpMode");
         telemetry.update();
         waitForStart();
+//        turn(90);
 
         updateValues();
 //      values[0] is the left and right alignment with april tag (x)
@@ -117,7 +118,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         int marginOfError = 1;
         double desiredX = 0;
         double desiredY = 10;
-        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY + marginOfError) {
+        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
             double xPower = 0.1;
             double yPower = 0.1;
 //            if(Math.abs(values[0]-desiredX) < 5){
@@ -163,16 +164,28 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         FRM.setPower(0);
         BRM.setPower(0);
 //      Potential way to strafe directly to desired target:
-//        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY + marginOfError) {
+//        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
+//            updateValues();
 //            //Get direction and account for difference in heading values
-//            double direction = Math.atan(values[0]/values[1]) - 90;
-//            double FLPower = (0.1 * Math.sin(direction * (Math.PI / 180) + Math.PI / 4.0));
-//            double FRPower = -(0.1 * Math.cos(direction * (Math.PI / 180) + Math.PI / 4.0));
-//            double BLPower = -(0.1 * Math.cos(direction * (Math.PI / 180) + Math.PI / 4.0));
-//            double BRPower = (0.1 * Math.sin(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            double direction = Math.atan(values[1]-desiredY)/values[0];
+//            double FLPower = (0.2 * Math.sin(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            double FRPower = -(0.2 * Math.cos(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            double BLPower = -(0.2 * Math.cos(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            double BRPower = (0.2 * Math.sin(direction * (Math.PI / 180) + Math.PI / 4.0));
+//            FRM.setPower(FRPower);
+//            BRM.setPower(BRPower);
+//            FLM.setPower(FLPower);
+//            BLM.setPower(BLPower);
+//            telemetry.addData("x", values[0]);
+//            telemetry.addData("y", values[1]);
+//            telemetry.addData("yaw", values[2]);
 //            telemetry.addData("direction", direction);
 //            telemetry.update();
 //        }
+        FLM.setPower(0);
+        BLM.setPower(0);
+        FRM.setPower(0);
+        BRM.setPower(0);
 
         // Save more CPU resources when camera is no longer needed.
         visionPortal.close();
@@ -270,19 +283,19 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         double targetAngle = currentAngle + degrees;
         double errorMargin = 1;
         while (currentAngle < (targetAngle - errorMargin) || currentAngle > (targetAngle + errorMargin)) {
-            double motorPower = Math.abs(currentAngle-targetAngle)/30;
+            double motorPower = 0.2;
             //TO DO: check turn direction
             if (currentAngle < targetAngle - errorMargin) {
-                FLM.setPower(-motorPower);
-                BLM.setPower(-motorPower);
-                FRM.setPower(motorPower);
-                BRM.setPower(motorPower);
-            }
-            else if (currentAngle>targetAngle+errorMargin) {
                 FLM.setPower(motorPower);
                 BLM.setPower(motorPower);
                 FRM.setPower(-motorPower);
                 BRM.setPower(-motorPower);
+            }
+            else if (currentAngle>targetAngle+errorMargin) {
+                FLM.setPower(-motorPower);
+                BLM.setPower(-motorPower);
+                FRM.setPower(motorPower);
+                BRM.setPower(motorPower);
             }
             telemetry.addData("TARGET ANGLE", targetAngle);
             telemetry.addData("CURRENT ANGLE", getAngle());
