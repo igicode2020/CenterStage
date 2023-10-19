@@ -118,70 +118,71 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         int marginOfError = 1;
         double desiredX = 0;
         double desiredY = 10;
-        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
-            double xPower = 0.1;
-            double yPower = 0.1;
-//            if(Math.abs(values[0]-desiredX) < 5){
-//                xPower = Math.abs(0.2);
+//        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
+//            double xPower = 0.1;
+//            double yPower = 0.1;
+////            if(Math.abs(values[0]-desiredX) < 5){
+////                xPower = Math.abs(0.2);
+////            }
+////            if(Math.abs(values[1]-desiredY) < 5){
+////                yPower = Math.abs(0.2);
+////            }
+//            //move side to side to adjust alignment with april tag (x)
+//            if (values[0] > 0) {
+//                FRM.setPower(xPower);
+//                BRM.setPower(-xPower);
+//                FLM.setPower(-xPower);
+//                BLM.setPower(xPower);
 //            }
-//            if(Math.abs(values[1]-desiredY) < 5){
-//                yPower = Math.abs(0.2);
+//            else if (values[0] < 0) {
+//                FRM.setPower(-xPower);
+//                BRM.setPower(xPower);
+//                FLM.setPower(xPower);
+//                BLM.setPower(-xPower);
 //            }
-            //move side to side to adjust alignment with april tag (x)
-            if (values[0] > 0) {
-                FRM.setPower(xPower);
-                BRM.setPower(-xPower);
-                FLM.setPower(-xPower);
-                BLM.setPower(xPower);
-            }
-            else if (values[0] < 0) {
-                FRM.setPower(-xPower);
-                BRM.setPower(xPower);
-                FLM.setPower(xPower);
-                BLM.setPower(-xPower);
-            }
-            //move forward or backward to adjust distance from april tag (y)
-            if (values[1] < 10) {
-                FRM.setPower(yPower);
-                BRM.setPower(yPower);
-                FLM.setPower(yPower);
-                BLM.setPower(yPower);
-            }
-            else if (values[1] > 10) {
-                FRM.setPower(-yPower);
-                BRM.setPower(-yPower);
-                FLM.setPower(-yPower);
-                BLM.setPower(-yPower);
-            }
-            updateValues();
-            telemetry.addData("x", values[0]);
-            telemetry.addData("y", values[1]);
-            telemetry.addData("yaw", values[2]);
-            telemetry.update();
-        }
+//            //move forward or backward to adjust distance from april tag (y)
+//            if (values[1] < 10) {
+//                FRM.setPower(yPower);
+//                BRM.setPower(yPower);
+//                FLM.setPower(yPower);
+//                BLM.setPower(yPower);
+//            }
+//            else if (values[1] > 10) {
+//                FRM.setPower(-yPower);
+//                BRM.setPower(-yPower);
+//                FLM.setPower(-yPower);
+//                BLM.setPower(-yPower);
+//            }
+//            updateValues();
+//            telemetry.addData("x", values[0]);
+//            telemetry.addData("y", values[1]);
+//            telemetry.addData("yaw", values[2]);
+//            telemetry.update();
+//        }
         FLM.setPower(0);
         BLM.setPower(0);
         FRM.setPower(0);
         BRM.setPower(0);
 //      Potential way to strafe directly to desired target:
-//        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
-//            updateValues();
-//            //Get direction and account for difference in heading values
-//            double direction = Math.atan(values[1]-desiredY)/values[0];
-//            double FLPower = (0.2 * Math.sin(direction * (Math.PI / 180) + Math.PI / 4.0));
-//            double FRPower = -(0.2 * Math.cos(direction * (Math.PI / 180) + Math.PI / 4.0));
-//            double BLPower = -(0.2 * Math.cos(direction * (Math.PI / 180) + Math.PI / 4.0));
-//            double BRPower = (0.2 * Math.sin(direction * (Math.PI / 180) + Math.PI / 4.0));
-//            FRM.setPower(FRPower);
-//            BRM.setPower(BRPower);
-//            FLM.setPower(FLPower);
-//            BLM.setPower(BLPower);
-//            telemetry.addData("x", values[0]);
-//            telemetry.addData("y", values[1]);
-//            telemetry.addData("yaw", values[2]);
-//            telemetry.addData("direction", direction);
-//            telemetry.update();
-//        }
+        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
+            updateValues();
+            //Get direction and account for difference in heading values
+            double direction = Math.PI*Math.sin(getRuntime()/5)+Math.PI;
+//            (values[1]-desiredY)/values[0]
+            double FLPower = (0.2 * Math.sin(direction + Math.PI / 4.0));
+            double FRPower = -(0.2 * Math.cos(direction + Math.PI / 4.0));
+            double BLPower = -(0.2 * Math.cos(direction + Math.PI / 4.0));
+            double BRPower = (0.2 * Math.sin(direction + Math.PI / 4.0));
+            FRM.setPower(-FRPower);
+            BRM.setPower(-BRPower);
+            FLM.setPower(-FLPower);
+            BLM.setPower(-BLPower);
+            telemetry.addData("x", values[0]);
+            telemetry.addData("y", values[1]);
+            telemetry.addData("yaw", values[2]);
+            telemetry.addData("direction", direction*180/Math.PI);
+            telemetry.update();
+        }
         FLM.setPower(0);
         BLM.setPower(0);
         FRM.setPower(0);
