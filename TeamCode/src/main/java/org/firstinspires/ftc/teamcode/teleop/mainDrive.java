@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.*;
 
-@TeleOp(name="MainDrive", group="--")
+@TeleOp(name="MainDrive", group="Teleop")
 // @Disabled
 public class mainDrive extends LinearOpMode {
 

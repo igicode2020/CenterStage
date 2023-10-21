@@ -50,7 +50,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
-@Autonomous(name = "April Tag Driving", group = "--")
+@Autonomous(name = "April Tag Driving", group = "Autonomous")
 // @Disabled
 public class driveToAprilTagMecanum extends LinearOpMode {
 
