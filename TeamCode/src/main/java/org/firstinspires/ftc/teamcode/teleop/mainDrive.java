@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.*;
 
-@TeleOp(name="MainDrive", group="Teleop")
+@TeleOp(name="MainDrive", group="--")
 // @Disabled
 public class mainDrive extends LinearOpMode {
 
@@ -67,6 +67,8 @@ public class mainDrive extends LinearOpMode {
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
+        BRM.setDirection(DcMotorEx.Direction.REVERSE);
+        FRM.setDirection(DcMotorEx.Direction.REVERSE);
 
         // Setting parameters for imu
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -83,7 +85,7 @@ public class mainDrive extends LinearOpMode {
         imu.initialize(parameters);
 
         //direction for headless mode
-        double direction = 0;
+        double direction;
         double speed;
 
         boolean headlessMode = true;
@@ -117,13 +119,13 @@ public class mainDrive extends LinearOpMode {
                 telemetry.addData("Right trigger", currentGamePad2.right_trigger);
                 telemetry.addData("Left trigger", currentGamePad2.left_trigger);
 
-                //start button will reset the robot heading
                 if (currentGamePad1.start && !previousGamePad1.start) {
                     parameters = new BNO055IMU.Parameters();
                     parameters.mode = BNO055IMU.SensorMode.IMU;
                     parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
                     parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
                     parameters.loggingEnabled = false;
+
                     imu.initialize(parameters);
                 }
 
@@ -132,18 +134,17 @@ public class mainDrive extends LinearOpMode {
                     slugMode = !slugMode;
                 }
 
-                // setting direction, atan2 gives back coordinates in radians, on the range of -pi to pi, (adj, opp)
-                direction = Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x) - (getAngle() * (Math.PI / 180));
+                // setting direction, atan2 gives theta in polar coordinates
+                direction = Math.atan2(gamepad1.left_stick_x, gamepad1.left_stick_y) - (getAngle() * (Math.PI / 180) - (Math.PI / 2));
+                speed = Math.min(1.0, Math.sqrt(gamepad1.left_stick_x * gamepad1.left_stick_x + gamepad1.left_stick_y * gamepad1.left_stick_y));
 
-                //a high value of speed should ensure the robot moves at maximum speed at all times because any numbers that
-                //are too high will be fixed once divided by the denominator later.
-                speed = 10;
-
-                //rotation is added to the left side motors of the robot to allow for curved driving
-                FLPower = speed * (Math.sin(direction + Math.PI / 4.0) + directionMultiplier * gamepad1.right_stick_x);
-                FRPower = speed * (Math.sin(direction - Math.PI / 4.0) - directionMultiplier * gamepad1.right_stick_x);
-                BLPower = speed * (Math.sin(direction - Math.PI / 4.0) + directionMultiplier * gamepad1.right_stick_x);
-                BRPower = speed * (Math.sin(direction + Math.PI / 4.0) - directionMultiplier * gamepad1.right_stick_x);
+//          Math.min is to make sure the powers aren't set to anything more than one for now
+//          Dividing by 28 to get a number between -1 and 1 (power percentage instead of ticks/sec)
+//          Multiply by -1 to reverse the direction of the robot
+                FLPower = (speed * Math.sin(direction + Math.PI / 4.0) - directionMultiplier * gamepad1.right_stick_x);
+                FRPower = -(speed * Math.cos(direction + Math.PI / 4.0) - directionMultiplier * gamepad1.right_stick_x);
+                BLPower = -(speed * Math.cos(direction + Math.PI / 4.0) + directionMultiplier * gamepad1.right_stick_x);
+                BRPower = (speed * Math.sin(direction + Math.PI / 4.0) + directionMultiplier * gamepad1.right_stick_x);
 
                 if (slugMode) {
                     FRPower = FRPower * slugMultiplier;
@@ -151,14 +152,6 @@ public class mainDrive extends LinearOpMode {
                     FLPower = FLPower * slugMultiplier;
                     BLPower = BLPower * slugMultiplier;
                 }
-
-                //Denominator is the maximum power given to a motor
-                double denominator = Math.max(Math.abs(FRPower), Math.max(Math.abs(BRPower), Math.max(Math.abs(FLPower), Math.abs(BLPower))));
-                //dividing by denominator will ensure the highest power given to a motor is 1, so none of the proportions are thrown off
-                FLPower /= denominator;
-                FRPower /= denominator;
-                BLPower /= denominator;
-                BRPower /= denominator;
 
                 FRM.setPower(FRPower);
                 BRM.setPower(BRPower);
@@ -166,20 +159,16 @@ public class mainDrive extends LinearOpMode {
                 BLM.setPower(BLPower);
             }
             else{
+
                 // button a to toggle slug mode
                 if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {
                     slugMode = !slugMode;
                 }
 
-                double x = gamepad1.left_stick_x;
-                double y = gamepad1.left_stick_y;
-                //rotation (rot) will be added to the left side motors of the robot to allow for curved driving
-                double rot = directionMultiplier*gamepad1.right_stick_x;
-
-                FRPower = y - x - rot;
-                BRPower = y + x - rot;
-                FLPower = y + x + rot;
-                BLPower = y - x + rot;
+                FRPower = (-gamepad1.left_stick_y - gamepad1.left_stick_x - directionMultiplier*gamepad1.right_stick_x);
+                BRPower = (-gamepad1.left_stick_y + gamepad1.left_stick_x - directionMultiplier*gamepad1.right_stick_x);
+                FLPower = (-gamepad1.left_stick_y + gamepad1.left_stick_x + directionMultiplier*gamepad1.right_stick_x);
+                BLPower = (-gamepad1.left_stick_y - gamepad1.left_stick_x + directionMultiplier*gamepad1.right_stick_x);
 
                 if (slugMode) {
                     FRPower = FRPower * slugMultiplier;
@@ -188,27 +177,19 @@ public class mainDrive extends LinearOpMode {
                     BLPower = BLPower * slugMultiplier;
                 }
 
-                //Denominator is the maximum power given to a motor
-                double denominator = Math.max(Math.abs(FRPower), Math.max(Math.abs(BRPower), Math.max(Math.abs(FLPower), Math.abs(BLPower))));
-                //dividing by denominator will ensure the highest power given to a motor is 1, so none of the proportions are thrown off
-                FLPower /= denominator;
-                FRPower /= denominator;
-                BLPower /= denominator;
-                BRPower /= denominator;
-
-                FRM.setPower(FRPower);
-                BRM.setPower(BRPower);
-                FLM.setPower(FLPower);
-                BLM.setPower(BLPower);
+                FRM.setPower(-FRPower);
+                BRM.setPower(-BRPower);
+                FLM.setPower(-FLPower);
+                BLM.setPower(-BLPower);
             }
 
+            telemetry.addData("slide position", slide_encoder_value);
             telemetry.addData("FRPower", FRPower);
             telemetry.addData("BRPower", BRPower);
             telemetry.addData("FLPower", FLPower);
             telemetry.addData("BLPower", BLPower);
-            telemetry.addData("Heading", getAngle());
-            telemetry.addData("Direction of Driving Based on Robot", direction*180/Math.PI);
-            telemetry.addData("Desired direction", Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x));
+            telemetry.addData("Direction", getAngle());
+            telemetry.addData("Accelerometer", imu.getAcceleration());
             telemetry.update();
 
         }

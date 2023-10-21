@@ -84,8 +84,8 @@ public class mainAutonomous extends LinearOpMode {
         imu.initialize(parameters);
         theoreticalAngle = getAngle();
 
-        BLM.setDirection(DcMotorEx.Direction.REVERSE);
-        FLM.setDirection(DcMotorEx.Direction.REVERSE);
+        BRM.setDirection(DcMotorEx.Direction.REVERSE);
+        FRM.setDirection(DcMotorEx.Direction.REVERSE);
         // leftIntake.setDirection(CRServo.Direction.REVERSE);
 
         FRM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -98,15 +98,8 @@ public class mainAutonomous extends LinearOpMode {
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        testone();
-        sleep(5000);
-        testtwo();
-        sleep(5000);
-        testthree();
-        sleep(5000);
-        testfour();
-        sleep(5000);
-        testfive();
+        RightSpike();
+
 
         // run a path based on sleeve recognition
     }
@@ -115,27 +108,32 @@ public class mainAutonomous extends LinearOpMode {
     // counter-clockwise is positive
     // x ticks - 60.96 cm
 
-    private void testone() {
-        runStraight(1300, 90);
+    private void RightSpike() {
+        runStraight(65, 90);
+        sleep(500);
+
+        turn(-90);
+        sleep(500);
+
+        turn(180);
+        sleep(500);
+
+        runStraight(60, -90);
     }
 
-    private void testtwo() {
-        runStraight(1300, 90);
+    private void CenterSpike() {
+        runStraight(30, -90);
     }
 
-    private void testthree() {
-        runStraight(1400, 90);
+    private void LeftSpike() {
+        runStraight(30, -90);
     }
 
-    private void testfour() {
-        runStraight(1500, 90);
-    }
-    private void testfive() {
-        runStraight(1600, 90);
-    }
 
     public int CMtoTicks(double DistanceCM){
-        return (int) (DistanceCM * 1 * drive);
+        return (int) (DistanceCM * 21.32 * drive);
+        // for original programming bot motors,
+            // - 1300 ticks is 2 feet/60.96 cm
     }
 
     public void runStraight(double centimeters, double direction) {
@@ -258,16 +256,16 @@ public class mainAutonomous extends LinearOpMode {
             }
 
             if (currentAngle<targetAngle-errorMargin) {
-                FLM.setPower(motorPower * drive);
-                BLM.setPower(motorPower * drive);
-                FRM.setPower(-motorPower * drive);
-                BRM.setPower(-motorPower * drive);
+                FLM.setPower(motorPower * -drive);
+                BLM.setPower(motorPower * -drive);
+                FRM.setPower(-motorPower * -drive);
+                BRM.setPower(-motorPower * -drive);
             }
             if (currentAngle>targetAngle+errorMargin) {
-                FLM.setPower(-motorPower * drive);
-                BLM.setPower(-motorPower * drive);
-                FRM.setPower(motorPower * drive);
-                BRM.setPower(motorPower * drive);
+                FLM.setPower(-motorPower * -drive);
+                BLM.setPower(-motorPower * -drive);
+                FRM.setPower(motorPower * -drive);
+                BRM.setPower(motorPower * -drive);
             }
 
             telemetry.addData("TARGET ANGLE", targetAngle);
