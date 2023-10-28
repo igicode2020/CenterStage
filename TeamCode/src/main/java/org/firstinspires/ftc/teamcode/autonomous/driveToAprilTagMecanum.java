@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -66,7 +67,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
 
     //Our Array used to hold x, y, and yaw april tag values
     static public double[] values = new double[3];
-    static public int id = 5;
+    static public int id = 1;
 
     //BNO055IMU is the orientation sensor
     BNO055IMU imu;
@@ -85,8 +86,8 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        BRM.setDirection(DcMotorEx.Direction.REVERSE);
-        FRM.setDirection(DcMotorEx.Direction.REVERSE);
+        FLM.setDirection(DcMotorEx.Direction.REVERSE);
+        FRM.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Setting parameters for imu
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -167,16 +168,17 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
             updateValues();
             //Get direction and account for difference in heading values
-            double direction = Math.PI*Math.sin(getRuntime()/5)+Math.PI;
-//            (values[1]-desiredY)/values[0]
-            double FLPower = (0.2 * Math.sin(direction + Math.PI / 4.0));
-            double FRPower = -(0.2 * Math.cos(direction + Math.PI / 4.0));
-            double BLPower = -(0.2 * Math.cos(direction + Math.PI / 4.0));
-            double BRPower = (0.2 * Math.sin(direction + Math.PI / 4.0));
-            FRM.setPower(-FRPower);
-            BRM.setPower(-BRPower);
-            FLM.setPower(-FLPower);
-            BLM.setPower(-BLPower);
+            double direction = Math.atan2(values[1]+desiredY, values[0]);
+
+            //rotation is added to the left side motors of the robot to allow for curved driving
+            double FLPower = 0.1*(Math.sin(direction + Math.PI / 4.0));
+            double FRPower = 0.1*(Math.sin(direction - Math.PI / 4.0));
+            double BLPower = 0.1*(Math.sin(direction - Math.PI / 4.0));
+            double BRPower = 0.1*(Math.sin(direction + Math.PI / 4.0));
+            FRM.setPower(FRPower);
+            BRM.setPower(BRPower);
+            FLM.setPower(FLPower);
+            BLM.setPower(BLPower);
             telemetry.addData("x", values[0]);
             telemetry.addData("y", values[1]);
             telemetry.addData("yaw", values[2]);
