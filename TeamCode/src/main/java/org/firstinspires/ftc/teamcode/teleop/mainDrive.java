@@ -156,16 +156,16 @@ public class mainDrive extends LinearOpMode {
                 }
 
                 while(gamepad1.a){
-                    BRM.setPower(0.2);
+                    BRM.setPower(0.1);
                 }
                 while(gamepad1.b){
-                    FRM.setPower(0.2);
+                    FRM.setPower(0.1);
                 }
                 while(gamepad1.y){
-                    FLM.setPower(0.2);
+                    FLM.setPower(0.1);
                 }
                 while(gamepad1.x){
-                    BLM.setPower(0.2);
+                    BLM.setPower(0.1);
                 }
                 FRM.setPower(FRPower);
                 BRM.setPower(BRPower);

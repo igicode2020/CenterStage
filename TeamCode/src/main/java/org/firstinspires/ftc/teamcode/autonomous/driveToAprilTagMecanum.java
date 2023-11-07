@@ -112,86 +112,101 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         waitForStart();
 //        turn(90);
 
-        updateValues();
+        if (opModeIsActive()) {
+            updateValues();
 //      values[0] is the left and right alignment with april tag (x)
 //      values[1] is the distance to april tag (y)
 //      values[2] is the yaw of the robot to the april tag
-        int marginOfError = 1;
-        double desiredX = 0;
-        double desiredY = 10;
-//        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
-//            double xPower = 0.1;
-//            double yPower = 0.1;
-////            if(Math.abs(values[0]-desiredX) < 5){
-////                xPower = Math.abs(0.2);
-////            }
-////            if(Math.abs(values[1]-desiredY) < 5){
-////                yPower = Math.abs(0.2);
-////            }
-//            //move side to side to adjust alignment with april tag (x)
-//            if (values[0] > 0) {
-//                FRM.setPower(xPower);
-//                BRM.setPower(-xPower);
-//                FLM.setPower(-xPower);
-//                BLM.setPower(xPower);
-//            }
-//            else if (values[0] < 0) {
-//                FRM.setPower(-xPower);
-//                BRM.setPower(xPower);
-//                FLM.setPower(xPower);
-//                BLM.setPower(-xPower);
-//            }
-//            //move forward or backward to adjust distance from april tag (y)
-//            if (values[1] < 10) {
-//                FRM.setPower(yPower);
-//                BRM.setPower(yPower);
-//                FLM.setPower(yPower);
-//                BLM.setPower(yPower);
-//            }
-//            else if (values[1] > 10) {
-//                FRM.setPower(-yPower);
-//                BRM.setPower(-yPower);
-//                FLM.setPower(-yPower);
-//                BLM.setPower(-yPower);
-//            }
-//            updateValues();
-//            telemetry.addData("x", values[0]);
-//            telemetry.addData("y", values[1]);
-//            telemetry.addData("yaw", values[2]);
-//            telemetry.update();
-//        }
-        FLM.setPower(0);
-        BLM.setPower(0);
-        FRM.setPower(0);
-        BRM.setPower(0);
-//      Potential way to strafe directly to desired target:
-        while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError) {
-            updateValues();
-            //Get direction and account for difference in heading values
-            double direction = Math.atan2(values[1]+desiredY, values[0]);
-
-            //rotation is added to the left side motors of the robot to allow for curved driving
-            double FLPower = 0.1*(Math.sin(direction + Math.PI / 4.0));
-            double FRPower = 0.1*(Math.sin(direction - Math.PI / 4.0));
-            double BLPower = 0.1*(Math.sin(direction - Math.PI / 4.0));
-            double BRPower = 0.1*(Math.sin(direction + Math.PI / 4.0));
-            FRM.setPower(FRPower);
-            BRM.setPower(BRPower);
-            FLM.setPower(FLPower);
-            BLM.setPower(BLPower);
+            int marginOfError = 1;
+            double desiredX = 0;
+            double desiredY = 10;
             telemetry.addData("x", values[0]);
             telemetry.addData("y", values[1]);
             telemetry.addData("yaw", values[2]);
-            telemetry.addData("direction", direction*180/Math.PI);
             telemetry.update();
-        }
-        FLM.setPower(0);
-        BLM.setPower(0);
-        FRM.setPower(0);
-        BRM.setPower(0);
+            while (true && opModeIsActive()){
+                FRM.setPower(0.1);
+                BRM.setPower(0.1);
+                FLM.setPower(0.1);
+                BLM.setPower(0.1);
+            }
+            while ((values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError) && opModeIsActive()) {
+                telemetry.addData("x", values[0]);
+                telemetry.addData("y", values[1]);
+                telemetry.addData("yaw", values[2]);
+                telemetry.update();
+                double xPower = 0.1;
+                //move side to side to adjust alignment with april tag (x)
+                if (values[0] > 0) {
+                    FRM.setPower(-xPower);
+                    BRM.setPower(xPower);
+                    FLM.setPower(xPower);
+                    BLM.setPower(-xPower);
+                } else if (values[0] < 0) {
+                    FRM.setPower(xPower);
+                    BRM.setPower(-xPower);
+                    FLM.setPower(-xPower);
+                    BLM.setPower(xPower);
+                }
+                //move forward or backward to adjust distance from april tag (y)
+                updateValues();
+                telemetry.addData("x", values[0]);
+                telemetry.addData("y", values[1]);
+                telemetry.addData("yaw", values[2]);
+                telemetry.update();
 
-        // Save more CPU resources when camera is no longer needed.
-        visionPortal.close();
+                }
+//            while (values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError && opModeIsActive()) {
+//                double yPower = 0.2;
+//                if (values[1] < 10) {
+//                    FRM.setPower(yPower);
+//                    BRM.setPower(yPower);
+//                    FLM.setPower(yPower);
+//                    BLM.setPower(yPower);
+//                } else if (values[1] > 10) {
+//                    FRM.setPower(-yPower);
+//                    BRM.setPower(-yPower);
+//                    FLM.setPower(-yPower);
+//                    BLM.setPower(-yPower);
+//            }
+//        }
+            FLM.setPower(0);
+            BLM.setPower(0);
+            FRM.setPower(0);
+            BRM.setPower(0);
+//      Potential way to strafe directly to desired target:
+//            while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError && opModeIsActive()) {
+//                updateValues();
+//                //Get direction and account for difference in heading values
+//                double direction = Math.atan2(values[1] + desiredY, values[0]);
+//
+//                //rotation is added to the left side motors of the robot to allow for curved driving
+//                double FLPower = 0.2 * (Math.sin(direction + Math.PI / 4.0));
+//                double FRPower = 0.2 * (Math.sin(direction - Math.PI / 4.0));
+//                double BLPower = 0.2 * (Math.sin(direction - Math.PI / 4.0));
+//                double BRPower = 0.2 * (Math.sin(direction + Math.PI / 4.0));
+//                FRM.setPower(FRPower);
+//                BRM.setPower(BRPower);
+//                FLM.setPower(FLPower);
+//                BLM.setPower(BLPower);
+//                telemetry.addData("x", values[0]);
+//                telemetry.addData("y", values[1]);
+//                telemetry.addData("yaw", values[2]);
+//                telemetry.addData("FRPower", FRPower);
+//                telemetry.addData("BRPower", BRPower);
+//                telemetry.addData("FLPower", FLPower);
+//                telemetry.addData("BLPower", BLPower);
+//                telemetry.addData("direction", direction * 180 / Math.PI);
+//                telemetry.update();
+//            }
+            FLM.setPower(0);
+            BLM.setPower(0);
+            FRM.setPower(0);
+            BRM.setPower(0);
+
+            // Save more CPU resources when camera is no longer needed.
+            visionPortal.close();
+        }
     }
 
     /**
@@ -241,17 +256,23 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         double yaw = 0;
 
         // Set the x, y, and yaw for the specified ID
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                //might be able to optimize this by not going through every detection
-                if(detection.id == id) {
-                    x = detection.ftcPose.x;
-                    y = detection.ftcPose.y;
-                    yaw = detection.ftcPose.yaw;
-                    break;
+        while(true && opModeIsActive()) {
+            currentDetections = aprilTag.getDetections();
+            for (AprilTagDetection detection : currentDetections) {
+                if (detection.metadata != null) {
+                    //might be able to optimize this by not going through every detection
+                    if (detection.id == id) {
+                        x = detection.ftcPose.x;
+                        y = detection.ftcPose.y;
+                        yaw = detection.ftcPose.yaw;
+                        break;
+                    }
                 }
+            }   // end for() loop
+            if(y != 0){
+                break;
             }
-        }   // end for() loop
+        }
         values[0] = x;
         values[1] = y;
         values[2] = yaw;
