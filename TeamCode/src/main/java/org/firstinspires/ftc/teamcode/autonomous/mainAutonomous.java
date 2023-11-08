@@ -84,8 +84,8 @@ public class mainAutonomous extends LinearOpMode {
         imu.initialize(parameters);
         theoreticalAngle = getAngle();
 
-        BRM.setDirection(DcMotorEx.Direction.REVERSE);
-        FRM.setDirection(DcMotorEx.Direction.REVERSE);
+        FLM.setDirection(DcMotorEx.Direction.REVERSE);
+
         // leftIntake.setDirection(CRServo.Direction.REVERSE);
 
         FRM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);

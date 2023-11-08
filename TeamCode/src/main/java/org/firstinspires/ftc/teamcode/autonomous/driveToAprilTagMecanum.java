@@ -87,7 +87,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
-        FRM.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Setting parameters for imu
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -110,8 +109,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         telemetry.addData(">", "Touch Play to start OpMode");
         telemetry.update();
         waitForStart();
-//        turn(90);
-
         if (opModeIsActive()) {
             updateValues();
 //      values[0] is the left and right alignment with april tag (x)
@@ -120,56 +117,52 @@ public class driveToAprilTagMecanum extends LinearOpMode {
             int marginOfError = 1;
             double desiredX = 0;
             double desiredY = 10;
-            telemetry.addData("x", values[0]);
-            telemetry.addData("y", values[1]);
-            telemetry.addData("yaw", values[2]);
-            telemetry.update();
-            while (true && opModeIsActive()){
-                FRM.setPower(0.1);
-                BRM.setPower(0.1);
-                FLM.setPower(0.1);
-                BLM.setPower(0.1);
-            }
-            while ((values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError) && opModeIsActive()) {
-                telemetry.addData("x", values[0]);
-                telemetry.addData("y", values[1]);
-                telemetry.addData("yaw", values[2]);
-                telemetry.update();
+            //move side to side to adjust alignment with april tag (x)
+            while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError && opModeIsActive()) {
                 double xPower = 0.1;
-                //move side to side to adjust alignment with april tag (x)
-                if (values[0] > 0) {
-                    FRM.setPower(-xPower);
-                    BRM.setPower(xPower);
-                    FLM.setPower(xPower);
-                    BLM.setPower(-xPower);
-                } else if (values[0] < 0) {
-                    FRM.setPower(xPower);
-                    BRM.setPower(-xPower);
+                updateValues();
+                if (values[0] < desiredX){
                     FLM.setPower(-xPower);
                     BLM.setPower(xPower);
+                    FRM.setPower(xPower);
+                    BRM.setPower(-xPower);
                 }
-                //move forward or backward to adjust distance from april tag (y)
-                updateValues();
+                else{
+                    FLM.setPower(xPower);
+                    BLM.setPower(-xPower);
+                    FRM.setPower(-xPower);
+                    BRM.setPower(xPower);
+                }
                 telemetry.addData("x", values[0]);
                 telemetry.addData("y", values[1]);
                 telemetry.addData("yaw", values[2]);
                 telemetry.update();
-
+            }
+            FLM.setPower(0);
+            BLM.setPower(0);
+            FRM.setPower(0);
+            BRM.setPower(0);
+            //move forward or backward to adjust distance from april tag (y)
+            while (values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError && opModeIsActive()) {
+                double yPower = 0.2;
+                updateValues();
+                if (values[1] < desiredY){
+                    FLM.setPower(-yPower);
+                    BLM.setPower(-yPower);
+                    FRM.setPower(-yPower);
+                    BRM.setPower(-yPower);
                 }
-//            while (values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError && opModeIsActive()) {
-//                double yPower = 0.2;
-//                if (values[1] < 10) {
-//                    FRM.setPower(yPower);
-//                    BRM.setPower(yPower);
-//                    FLM.setPower(yPower);
-//                    BLM.setPower(yPower);
-//                } else if (values[1] > 10) {
-//                    FRM.setPower(-yPower);
-//                    BRM.setPower(-yPower);
-//                    FLM.setPower(-yPower);
-//                    BLM.setPower(-yPower);
-//            }
-//        }
+                else{
+                    FLM.setPower(yPower);
+                    BLM.setPower(yPower);
+                    FRM.setPower(yPower);
+                    BRM.setPower(yPower);
+                }
+                telemetry.addData("x", values[0]);
+                telemetry.addData("y", values[1]);
+                telemetry.addData("yaw", values[2]);
+                telemetry.update();
+            }
             FLM.setPower(0);
             BLM.setPower(0);
             FRM.setPower(0);
@@ -199,11 +192,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
 //                telemetry.addData("direction", direction * 180 / Math.PI);
 //                telemetry.update();
 //            }
-            FLM.setPower(0);
-            BLM.setPower(0);
-            FRM.setPower(0);
-            BRM.setPower(0);
-
             // Save more CPU resources when camera is no longer needed.
             visionPortal.close();
         }
