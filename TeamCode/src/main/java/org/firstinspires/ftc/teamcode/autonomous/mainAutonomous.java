@@ -36,7 +36,7 @@ public class mainAutonomous extends LinearOpMode {
     double speed = 0.5;
     double turningPower = 0.3;
     double errorMargin = 0.5; // degrees
-    double drive = 1;
+    double autoPower = 0.15;
     double theoreticalAngle;
 
     // object detection cases (Left perspective looking at field from starting point)
@@ -85,6 +85,7 @@ public class mainAutonomous extends LinearOpMode {
         theoreticalAngle = getAngle();
 
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
+        FRM.setDirection(DcMotorEx.Direction.REVERSE);
 
         // leftIntake.setDirection(CRServo.Direction.REVERSE);
 
@@ -100,7 +101,6 @@ public class mainAutonomous extends LinearOpMode {
 
         RightSpike();
 
-
         // run a path based on sleeve recognition
     }
 
@@ -109,7 +109,8 @@ public class mainAutonomous extends LinearOpMode {
     // x ticks - 60.96 cm
 
     private void RightSpike() {
-        runStraight(65, 90);
+
+        runStraight(65);
         sleep(500);
 
         turn(-90);
@@ -118,25 +119,27 @@ public class mainAutonomous extends LinearOpMode {
         turn(180);
         sleep(500);
 
-        runStraight(60, -90);
+        runStraight(60);
     }
 
     private void CenterSpike() {
-        runStraight(30, -90);
+        runStraight(30);
     }
 
     private void LeftSpike() {
-        runStraight(30, -90);
+        runStraight(30);
     }
 
 
     public int CMtoTicks(double DistanceCM){
-        return (int) (DistanceCM * 21.32 * drive);
+        return (int) (DistanceCM * 4.94);
+        // return (int) (DistanceCM * 21.32 * 1);
         // for original programming bot motors,
-            // - 1300 ticks is 2 feet/60.96 cm
+        // - 300 ticks is 2 feet/60.96 for new robot - 4.94 ticks is 1 cm
+        // - 1300 ticks is 2 feet/60.96 cm old robot
     }
 
-    public void runStraight(double centimeters, double direction) {
+    public void runStraight(double centimeters) {
         int ticks = CMtoTicks(centimeters);
 
         FRM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -149,10 +152,14 @@ public class mainAutonomous extends LinearOpMode {
         FLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         BLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        FLPower = (speed * Math.sin(direction*(Math.PI/180) + Math.PI / 4.0));
-        FRPower = -(speed * Math.cos(direction*(Math.PI/180) + Math.PI / 4.0));
-        BLPower = -(speed * Math.cos(direction*(Math.PI/180) + Math.PI / 4.0));
-        BRPower = (speed * Math.sin(direction*(Math.PI/180) + Math.PI / 4.0));
+        if (centimeters <= 0) {
+            autoPower = -autoPower;
+        }
+
+        FRPower = autoPower;
+        FLPower = autoPower;
+        BRPower = autoPower;
+        BLPower = autoPower;
 
         if (FRPower<0) {
             FRM.setTargetPosition(-ticks);
@@ -249,23 +256,23 @@ public class mainAutonomous extends LinearOpMode {
         while (currentAngle<(targetAngle-errorMargin) || currentAngle>(targetAngle+errorMargin))
         {
             if (Math.abs(targetAngle - currentAngle) < 5) {
-                motorPower = 0.2;
+                motorPower = 0.1;
             }
             else {
                 motorPower = turningPower;
             }
 
             if (currentAngle<targetAngle-errorMargin) {
-                FLM.setPower(motorPower * -drive);
-                BLM.setPower(motorPower * -drive);
-                FRM.setPower(-motorPower * -drive);
-                BRM.setPower(-motorPower * -drive);
+                FLM.setPower(motorPower * -1);
+                BLM.setPower(motorPower * -1);
+                FRM.setPower(-motorPower * -1);
+                BRM.setPower(-motorPower * -1);
             }
             if (currentAngle>targetAngle+errorMargin) {
-                FLM.setPower(-motorPower * -drive);
-                BLM.setPower(-motorPower * -drive);
-                FRM.setPower(motorPower * -drive);
-                BRM.setPower(motorPower * -drive);
+                FLM.setPower(-motorPower * -1);
+                BLM.setPower(-motorPower * -1);
+                FRM.setPower(motorPower * -1);
+                BRM.setPower(motorPower * -1);
             }
 
             telemetry.addData("TARGET ANGLE", targetAngle);
@@ -283,64 +290,22 @@ public class mainAutonomous extends LinearOpMode {
         BRM.setPower(0);
     }
 
-    public int sleeveDetection() {
-        // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
-        // first.
+    private void telemetryTfod() {
 
-        /**
-         * Activate TensorFlow Object Detection before we wait for the start command.
-         * Do it here so that the Camera Stream window will have the TensorFlow annotations visible.
-         **/
-        if (tfod != null) {
-            tfod.activate();
+        List<Recognition> currentRecognitions = tfod.getRecognitions();
+        telemetry.addData("# Objects Detected", currentRecognitions.size());
 
-            // The TensorFlow software will scale the input images from the camera to a lower resolution.
-            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
-            // If your target is at distance greater than 50 cm (20") you can increase the magnification value
-            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
-            // should be set to the value of the images used to create the TensorFlow Object Detection model
-            // (typically 16/9).
-        }
-        while ((runtime.time() - starting_time) < 12) {
-            if (tfod != null) {
-                // getUpdatedRecognitions() will return null if no new information is available since
-                // the last time that call was made.
-                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-                if (updatedRecognitions != null) {
-                    telemetry.addData("# Objects Detected", updatedRecognitions.size());
+        // Step through the list of recognitions and display info for each one.
+        for (Recognition recognition : currentRecognitions) {
+            double x = (recognition.getLeft() + recognition.getRight()) / 2 ;
+            double y = (recognition.getTop()  + recognition.getBottom()) / 2 ;
 
-                    // step through the list of recognitions and display image position/size information for each one
-                    // Note: "Image number" refers to the randomized image orientation/number
-                    for (Recognition recognition : updatedRecognitions) {
-                        double col = (recognition.getLeft() + recognition.getRight()) / 2;
-                        double row = (recognition.getTop() + recognition.getBottom()) / 2;
-                        double width = Math.abs(recognition.getRight() - recognition.getLeft());
-                        double height = Math.abs(recognition.getTop() - recognition.getBottom());
+            telemetry.addData(""," ");
+            telemetry.addData("Image", "%s (%.0f %% Conf.)", recognition.getLabel(), recognition.getConfidence() * 100);
+            telemetry.addData("- Position", "%.0f / %.0f", x, y);
+            telemetry.addData("- Size", "%.0f x %.0f", recognition.getWidth(), recognition.getHeight());
+        }   // end for() loop
 
-                        telemetry.addData("", " ");
-                        telemetry.addData("Image", "%s (%.0f %% Conf.)", recognition.getLabel(), recognition.getConfidence() * 100);
-                        telemetry.addData("- Position (Row/Col)", "%.0f / %.0f", row, col);
-                        telemetry.addData("- Size (Width/Height)", "%.0f / %.0f", width, height);
-
-                        if (recognition.getLabel() == "Triangle") {
-                            return 1;
-                        }
-                        else if (recognition.getLabel() == "Square") {
-                            return 3;
-                        }
-                        else {
-                            return 2;
-                        }
-                    }
-                    telemetry.update();
-                }
-            }
-        }
-
-        return 2;
-    }
-    /**
-     * Initialize the Vuforia localization engine.
-     */
+    }   // end method telemetryTfod()
 
 }
