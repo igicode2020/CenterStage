@@ -14,12 +14,19 @@ public class mainDrive extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
+
     private DcMotor FRM = null;
     private DcMotor BRM = null;
     private DcMotor FLM = null;
     private DcMotor BLM = null;
 
+    private DcMotor wheelMotor = null;
+
+    double scaleMultiplier = 0.6;
+
     double FRPower, BRPower, FLPower, BLPower;
+
+    double wheelMotorPower = 1;
 
     //set constants
     double directionMultiplier = 0.5;
@@ -31,7 +38,7 @@ public class mainDrive extends LinearOpMode {
 
     // Setting up Slug Mode Parameters
     boolean slugMode = false;
-    double slugMultiplier = 0.33;
+    double slugMultiplier = 0.2;
 
     // set up imu for gyro
     // BNO055IMU is the orientation sensor
@@ -49,6 +56,7 @@ public class mainDrive extends LinearOpMode {
         BRM = hardwareMap.get(DcMotorEx.class, "backRight");
         FLM = hardwareMap.get(DcMotorEx.class, "frontLeft");
         BLM = hardwareMap.get(DcMotorEx.class, "backLeft");
+        wheelMotor = hardwareMap.get(DcMotorEx.class, "wheelMotor");
 
         //GamePads to save previous state of gamepad for button toggling
         Gamepad previousGamePad1 = new Gamepad();
@@ -61,11 +69,13 @@ public class mainDrive extends LinearOpMode {
         BRM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         FLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         BLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        wheelMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         FRM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BRM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        wheelMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
         FRM.setDirection(DcMotorEx.Direction.REVERSE);
@@ -115,7 +125,7 @@ public class mainDrive extends LinearOpMode {
                 headlessMode = !headlessMode;
             }
 
-            if(headlessMode) {
+            if (headlessMode) {
                 telemetry.addData("Right trigger", currentGamePad2.right_trigger);
                 telemetry.addData("Left trigger", currentGamePad2.left_trigger);
 
@@ -127,6 +137,16 @@ public class mainDrive extends LinearOpMode {
                     parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
                     parameters.loggingEnabled = false;
                     imu.initialize(parameters);
+                }
+
+                if (currentGamePad1.dpad_down) {
+                    wheelMotor.setPower(wheelMotorPower);
+                }
+                else if (currentGamePad1.dpad_up) {
+                    wheelMotor.setPower(-wheelMotorPower);
+                }
+                else {
+                    wheelMotor.setPower(0);
                 }
 
                 // button a to toggle slug mode
@@ -166,6 +186,12 @@ public class mainDrive extends LinearOpMode {
                 while(gamepad1.x){
                     BLM.setPower(0.1);
                 }
+
+                FRPower = FRPower * scaleMultiplier;
+                BRPower = BRPower * scaleMultiplier;
+                FLPower = FLPower * scaleMultiplier;
+                BLPower = BLPower * scaleMultiplier;
+
                 FRM.setPower(FRPower);
                 BRM.setPower(BRPower);
                 FLM.setPower(FLPower);
@@ -193,6 +219,11 @@ public class mainDrive extends LinearOpMode {
                     FLPower = FLPower * slugMultiplier;
                     BLPower = BLPower * slugMultiplier;
                 }
+
+                FRPower = FRPower * scaleMultiplier;
+                BRPower = BRPower * scaleMultiplier;
+                FLPower = FLPower * scaleMultiplier;
+                BLPower = BLPower * scaleMultiplier;
 
                 FRM.setPower(FRPower);
                 BRM.setPower(BRPower);

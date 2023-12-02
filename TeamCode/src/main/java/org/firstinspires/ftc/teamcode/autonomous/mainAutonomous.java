@@ -1,10 +1,14 @@
 package org.firstinspires.ftc.teamcode.autonomous;
+import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.navigation.*;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -12,6 +16,9 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.tfod.TfodProcessor;
+
 import java.util.List;
 
 @Autonomous(name="MainAutonomous", group="")
@@ -34,14 +41,17 @@ public class mainAutonomous extends LinearOpMode {
     //power variables
     double FRPower, BRPower, FLPower, BLPower;
     double speed = 0.5;
-    double turningPower = 0.3;
+    double turningPower = 0.4; // 0.22
+    double initialTurningVelocity = 200; // 150
+    double turningVelocity;
     double errorMargin = 0.5; // degrees
     double autoPower = 0.15;
     double theoreticalAngle;
 
     // object detection cases (Left perspective looking at field from starting point)
-    double sleeveNum;
-    private TFObjectDetector tfod;
+    double sleeveNum = 1;
+    private TfodProcessor tfod;
+    double max_index;
     // private static final String TFOD_MODEL_ASSET = "";
 
     // Gamepad previousGamePad1 = new Gamepad();
@@ -52,12 +62,47 @@ public class mainAutonomous extends LinearOpMode {
     Orientation lastAngles = new Orientation();
     double globalAngle;
 
+    private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
+    // TFOD_MODEL_ASSET points to a model file stored in the project Asset location,
+    // this is only used for Android Studio when using models in Assets.
+    private static final String TFOD_MODEL_ASSET = "redball.tflite";
+    // TFOD_MODEL_FILE points to a model file stored onboard the Robot Controller's storage,
+    // this is used when uploading models directly to the RC using the model upload interface.
+    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/redball.tflite";
+    // Define the labels recognized in the model for TFOD (must be in training order!)
+    private static final String[] LABELS = {
+            "redball",
+    };
+    private VisionPortal visionPortal;
+    double maxConfidence;
+
     @Override
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
+        initTfod();
+        telemetry.addData("Status", "Tfod Initialized");
+        telemetry.update();
+
+        while (!opModeIsActive()) {
+            telemetryTfod();
+            // Push telemetry to the Driver Station.
+            telemetry.update();
+
+            // Save CPU resources; can resume streaming when needed.
+            if (gamepad1.dpad_down) {
+                visionPortal.stopStreaming();
+            } else if (gamepad1.dpad_up) {
+                visionPortal.resumeStreaming();
+            }
+
+            // Share the CPU.
+            sleep(20);
+        }
+
         waitForStart();
+        visionPortal.close();
 
         // initialization time
         starting_time = runtime.time();
@@ -109,25 +154,56 @@ public class mainAutonomous extends LinearOpMode {
     // x ticks - 60.96 cm
 
     private void RightSpike() {
-
         runStraight(65);
-        sleep(500);
+        sleep(1000);
 
         turn(-90);
-        sleep(500);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
 
         turn(180);
-        sleep(500);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
 
         runStraight(60);
     }
 
     private void CenterSpike() {
-        runStraight(30);
+        runStraight(58);
+        sleep(1000);
+        runStraight(7);
+        sleep(1000);
+
+        turn(90);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+
+        runStraight(65);
     }
 
     private void LeftSpike() {
-        runStraight(30);
+        runStraight(65);
+        sleep(1000);
+
+        turn(90);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+
+        runStraight(-10);
+        sleep(1000);
+        runStraight(70);
     }
 
 
@@ -252,14 +328,16 @@ public class mainAutonomous extends LinearOpMode {
         double currentAngle = getAngle();
         double targetAngle = theoreticalAngle + degrees;
         double motorPower = turningPower;
+        double linearError = 0;
 
         while (currentAngle<(targetAngle-errorMargin) || currentAngle>(targetAngle+errorMargin))
         {
+
             if (Math.abs(targetAngle - currentAngle) < 5) {
-                motorPower = 0.1;
+                turningVelocity = 0.8 * initialTurningVelocity;
             }
             else {
-                motorPower = turningPower;
+                turningVelocity = initialTurningVelocity;
             }
 
             if (currentAngle<targetAngle-errorMargin) {
@@ -267,12 +345,22 @@ public class mainAutonomous extends LinearOpMode {
                 BLM.setPower(motorPower * -1);
                 FRM.setPower(-motorPower * -1);
                 BRM.setPower(-motorPower * -1);
+
+                FLM.setVelocity(-turningVelocity);
+                BLM.setVelocity(-turningVelocity);
+                FRM.setVelocity(turningVelocity);
+                BRM.setVelocity(turningVelocity);
             }
             if (currentAngle>targetAngle+errorMargin) {
                 FLM.setPower(-motorPower * -1);
                 BLM.setPower(-motorPower * -1);
                 FRM.setPower(motorPower * -1);
                 BRM.setPower(motorPower * -1);
+
+                FLM.setVelocity(turningVelocity);
+                BLM.setVelocity(turningVelocity);
+                FRM.setVelocity(-turningVelocity);
+                BRM.setVelocity(-turningVelocity);
             }
 
             telemetry.addData("TARGET ANGLE", targetAngle);
@@ -296,9 +384,30 @@ public class mainAutonomous extends LinearOpMode {
         telemetry.addData("# Objects Detected", currentRecognitions.size());
 
         // Step through the list of recognitions and display info for each one.
+        maxConfidence = 0;
         for (Recognition recognition : currentRecognitions) {
             double x = (recognition.getLeft() + recognition.getRight()) / 2 ;
             double y = (recognition.getTop()  + recognition.getBottom()) / 2 ;
+
+            // first is the x
+            // 484
+
+            // Use to see if the recognition is valid
+            double x_width = Math.abs((recognition.getLeft() - recognition.getRight()));
+            double y_width = Math.abs((recognition.getTop() - recognition.getBottom()));
+
+            if (recognition.getConfidence() > maxConfidence) {
+                telemetry.addData("Confident Detection", maxConfidence);
+                maxConfidence = recognition.getConfidence();
+                max_index = currentRecognitions.indexOf(recognition);
+            }
+
+            // Add bounds
+            // Center Spike Left: 204
+            // Center Spike Right: 350
+
+            // Right Spike Left: 421
+            // Right Spike Right: 530
 
             telemetry.addData(""," ");
             telemetry.addData("Image", "%s (%.0f %% Conf.)", recognition.getLabel(), recognition.getConfidence() * 100);
@@ -306,6 +415,71 @@ public class mainAutonomous extends LinearOpMode {
             telemetry.addData("- Size", "%.0f x %.0f", recognition.getWidth(), recognition.getHeight());
         }   // end for() loop
 
+
+
     }   // end method telemetryTfod()
+
+    private void initTfod() {
+        // Create the TensorFlow processor by using a builder.
+        tfod = new TfodProcessor.Builder()
+
+                // With the following lines commented out, the default TfodProcessor Builder
+                // will load the default model for the season. To define a custom model to load,
+                // choose one of the following:
+                //   Use setModelAssetName() if the custom TF Model is built in as an asset (AS only).
+                //   Use setModelFileName() if you have downloaded a custom team model to the Robot Controller.
+
+                // Add model asset here
+                .setModelAssetName(TFOD_MODEL_ASSET)
+                // May need default
+
+                //.setModelFileName(TFOD_MODEL_FILE)
+
+                // The following default settings are available to un-comment and edit as needed to
+                // set parameters for custom models.
+                .setModelLabels(LABELS)
+                //.setIsModelTensorFlow2(true) // default is true
+                // .setIsModelQuantized(true) // default is true
+                .setModelInputSize(300) // default is 300
+                .setModelAspectRatio(16.0 / 9.0) // default is 16.0 / 9.0
+                .build();
+
+        // Create the vision portal by using a builder.
+        VisionPortal.Builder builder = new VisionPortal.Builder();
+
+        // Set the camera (webcam vs. built-in RC phone camera).
+        if (USE_WEBCAM) {
+            builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        } else {
+            builder.setCamera(BuiltinCameraDirection.BACK);
+        }
+
+        // Choose a camera resolution. Not all cameras support all resolutions.
+        builder.setCameraResolution(new Size(640, 360));
+
+        // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
+        //builder.enableLiveView(true);
+
+        // Set the stream format; MJPEG uses less bandwidth than default YUY2.
+        //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
+
+        // Choose whether or not LiveView stops if no processors are enabled.
+        // If set "true", monitor shows solid orange screen if no processors enabled.
+        // If set "false", monitor shows camera view without annotations.
+        //builder.setAutoStopLiveView(false);
+
+        // Set and enable the processor.
+        builder.addProcessor(tfod);
+
+        // Build the Vision Portal, using the above settings.
+        visionPortal = builder.build();
+
+        // Set confidence threshold for TFOD recognitions, at any time.
+        tfod.setMinResultConfidence(0.60f); // default is .75
+
+        // Disable or re-enable the TFOD processor at any time.
+        //visionPortal.setProcessorEnabled(tfod, true);
+
+    }   // end method initTfod()
 
 }
