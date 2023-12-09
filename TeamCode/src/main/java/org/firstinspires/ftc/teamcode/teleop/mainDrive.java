@@ -22,11 +22,14 @@ public class mainDrive extends LinearOpMode {
 
     private DcMotor wheelMotor = null;
 
+    private DcMotor slide = null;
+
     double scaleMultiplier = 0.6;
 
     double FRPower, BRPower, FLPower, BLPower;
 
     double wheelMotorPower = 1;
+
 
     //set constants
     double directionMultiplier = 0.5;
@@ -57,6 +60,7 @@ public class mainDrive extends LinearOpMode {
         FLM = hardwareMap.get(DcMotorEx.class, "frontLeft");
         BLM = hardwareMap.get(DcMotorEx.class, "backLeft");
         wheelMotor = hardwareMap.get(DcMotorEx.class, "wheelMotor");
+        // slide = hardwareMap.get(DcMotorEx.class, "liftMotor");
 
         //GamePads to save previous state of gamepad for button toggling
         Gamepad previousGamePad1 = new Gamepad();
@@ -76,6 +80,7 @@ public class mainDrive extends LinearOpMode {
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         wheelMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        // slide.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
         FRM.setDirection(DcMotorEx.Direction.REVERSE);
@@ -149,6 +154,16 @@ public class mainDrive extends LinearOpMode {
                     wheelMotor.setPower(0);
                 }
 
+                /*if (currentGamePad1.right_trigger > 0) {
+                    slide.setPower(currentGamePad1.right_trigger);
+                }
+                else if (currentGamePad1.left_trigger > 0) {
+                    slide.setPower(currentGamePad1.left_trigger);
+                }
+                else {
+                    slide.setPower(0);
+                }*/
+
                 // button a to toggle slug mode
                 if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {
                     slugMode = !slugMode;
@@ -201,6 +216,26 @@ public class mainDrive extends LinearOpMode {
                 // button a to toggle slug mode
                 if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {
                     slugMode = !slugMode;
+                }
+
+                /*if (currentGamePad1.right_trigger > 0) {
+                    slide.setPower(currentGamePad1.right_trigger);
+                }
+                else if (currentGamePad1.left_trigger > 0) {
+                    slide.setPower(currentGamePad1.left_trigger);
+                }
+                else {
+                    slide.setPower(0);
+                }*/
+
+                if (currentGamePad1.dpad_down) {
+                    wheelMotor.setPower(wheelMotorPower);
+                }
+                else if (currentGamePad1.dpad_up) {
+                    wheelMotor.setPower(-wheelMotorPower);
+                }
+                else {
+                    wheelMotor.setPower(0);
                 }
 
                 double x = gamepad1.left_stick_x;

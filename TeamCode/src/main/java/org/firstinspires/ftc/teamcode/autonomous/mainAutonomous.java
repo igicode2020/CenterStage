@@ -49,9 +49,9 @@ public class mainAutonomous extends LinearOpMode {
     double theoreticalAngle;
 
     // object detection cases (Left perspective looking at field from starting point)
-    double sleeveNum = 1;
+    String spikePosition = "left";
     private TfodProcessor tfod;
-    double max_index;
+    double max_index = -1;
     // private static final String TFOD_MODEL_ASSET = "";
 
     // Gamepad previousGamePad1 = new Gamepad();
@@ -144,7 +144,16 @@ public class mainAutonomous extends LinearOpMode {
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        RightSpike();
+        if (spikePosition == "right") {
+            DropRightSpike();
+        }
+        else if (spikePosition == "center") {
+            DropCenterSpike();
+        }
+        else {
+            DropLeftSpike();
+        }
+
 
         // run a path based on sleeve recognition
     }
@@ -153,7 +162,7 @@ public class mainAutonomous extends LinearOpMode {
     // counter-clockwise is positive
     // x ticks - 60.96 cm
 
-    private void RightSpike() {
+    private void OpRightSpike() {
         runStraight(65);
         sleep(1000);
 
@@ -174,7 +183,7 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(60);
     }
 
-    private void CenterSpike() {
+    private void OpCenterSpike() {
         runStraight(58);
         sleep(1000);
         runStraight(7);
@@ -190,7 +199,7 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(65);
     }
 
-    private void LeftSpike() {
+    private void OpLeftSpike() {
         runStraight(65);
         sleep(1000);
 
@@ -201,10 +210,67 @@ public class mainAutonomous extends LinearOpMode {
         turn(0);
         sleep(1000);
 
+        // Need to fix this part
         runStraight(-10);
         sleep(1000);
         runStraight(70);
     }
+
+    private void DropRightSpike() {
+        runStraight(65);
+        sleep(1000);
+
+        turn(-90);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+
+        turn(180);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+
+        runStraight(60);
+    }
+
+    private void DropCenterSpike() {
+        runStraight(58);
+        sleep(1000);
+        runStraight(7);
+        sleep(1000);
+
+        turn(90);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+
+        runStraight(65);
+    }
+
+    private void DropLeftSpike() {
+        runStraight(65);
+        sleep(1000);
+
+        turn(90);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+
+        // Need to fix this part
+        runStraight(-10);
+        sleep(1000);
+        runStraight(70);
+    }
+
+
 
 
     public int CMtoTicks(double DistanceCM){
@@ -228,41 +294,29 @@ public class mainAutonomous extends LinearOpMode {
         FLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         BLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        if (centimeters <= 0) {
-            autoPower = -autoPower;
+        if (centimeters >= 0) {
+            FRPower = autoPower;
+            FLPower = autoPower;
+            BRPower = autoPower;
+            BLPower = autoPower;
         }
-
-        FRPower = autoPower;
-        FLPower = autoPower;
-        BRPower = autoPower;
-        BLPower = autoPower;
+        else {
+            FRPower = -autoPower;
+            FLPower = -autoPower;
+            BRPower = -autoPower;
+            BLPower = -autoPower;
+        }
 
         if (FRPower<0) {
-            FRM.setTargetPosition(-ticks);
-        }
-        else {
-            FRM.setTargetPosition(ticks);
-        }
-
-        if (FLPower<0) {
-            FLM.setTargetPosition(-ticks);
-        }
-        else {
-            FLM.setTargetPosition(ticks);
-        }
-
-        if (BRPower<0) {
-            BRM.setTargetPosition(-ticks);
-        }
-        else {
-            BRM.setTargetPosition(ticks);
-        }
-
-        if (BLPower<0) {
-            BLM.setTargetPosition(-ticks);
-        }
-        else {
-            BLM.setTargetPosition(ticks);
+            FRM.setTargetPosition(-ticks + FRM.getCurrentPosition());
+            FLM.setTargetPosition(-ticks + FLM.getCurrentPosition());
+            BRM.setTargetPosition(-ticks + BRM.getCurrentPosition());
+            BLM.setTargetPosition(-ticks + BLM.getCurrentPosition());
+        } else {
+            FRM.setTargetPosition(ticks + FRM.getCurrentPosition());
+            FLM.setTargetPosition(ticks + FLM.getCurrentPosition());
+            BRM.setTargetPosition(ticks + BRM.getCurrentPosition());
+            BLM.setTargetPosition(ticks + BLM.getCurrentPosition());
         }
 
         FLM.setPower(FLPower);
@@ -385,38 +439,41 @@ public class mainAutonomous extends LinearOpMode {
 
         // Step through the list of recognitions and display info for each one.
         maxConfidence = 0;
+        max_index = -1;
         for (Recognition recognition : currentRecognitions) {
-            double x = (recognition.getLeft() + recognition.getRight()) / 2 ;
-            double y = (recognition.getTop()  + recognition.getBottom()) / 2 ;
+            double x = (recognition.getLeft() + recognition.getRight()) / 2;
+            double y = (recognition.getTop() + recognition.getBottom()) / 2;
 
             // first is the x
             // 484
 
-            // Use to see if the recognition is valid
-            double x_width = Math.abs((recognition.getLeft() - recognition.getRight()));
-            double y_width = Math.abs((recognition.getTop() - recognition.getBottom()));
-
-            if (recognition.getConfidence() > maxConfidence) {
+            if ((recognition.getConfidence() > maxConfidence) && (recognition.getWidth() < 120) && (recognition.getHeight() < 120)) {
                 telemetry.addData("Confident Detection", maxConfidence);
                 maxConfidence = recognition.getConfidence();
                 max_index = currentRecognitions.indexOf(recognition);
             }
 
-            // Add bounds
-            // Center Spike Left: 204
-            // Center Spike Right: 350
-
-            // Right Spike Left: 421
-            // Right Spike Right: 530
-
-            telemetry.addData(""," ");
             telemetry.addData("Image", "%s (%.0f %% Conf.)", recognition.getLabel(), recognition.getConfidence() * 100);
             telemetry.addData("- Position", "%.0f / %.0f", x, y);
             telemetry.addData("- Size", "%.0f x %.0f", recognition.getWidth(), recognition.getHeight());
         }   // end for() loop
+        if (max_index != -1) {
+            Recognition max_recognition = currentRecognitions.get((int) max_index);
+            double max_x = (max_recognition.getLeft() + max_recognition.getRight()) / 2;
+            double max_y = (max_recognition.getTop() + max_recognition.getBottom()) / 2;
 
+            if (max_x < 350 && max_x > 204) {
+                spikePosition = "center";
+            } else if (max_x < 530 && max_x > 421) {
+                spikePosition = "right";
+            }
+        }
+        // Add bounds
+        // Center Spike Left: 204
+        // Center Spike Right: 350
 
-
+        // Right Spike Left: 421
+        // Right Spike Right: 530
     }   // end method telemetryTfod()
 
     private void initTfod() {
