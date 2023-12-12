@@ -213,7 +213,7 @@ public class mainAutonomous extends LinearOpMode {
         // Need to fix this part
         runStraight(-10);
         sleep(1000);
-        runStraight(70);
+        runStraight(270);
     }
 
     private void DropRightSpike() {
@@ -294,7 +294,7 @@ public class mainAutonomous extends LinearOpMode {
         FLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         BLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        if (centimeters >= 0) {
+        /*if (centimeters >= 0) {
             FRPower = autoPower;
             FLPower = autoPower;
             BRPower = autoPower;
@@ -305,7 +305,12 @@ public class mainAutonomous extends LinearOpMode {
             FLPower = -autoPower;
             BRPower = -autoPower;
             BLPower = -autoPower;
-        }
+        }*/
+
+        FRPower = autoPower;
+        FLPower = autoPower;
+        BRPower = autoPower;
+        BLPower = autoPower;
 
         if (FRPower<0) {
             FRM.setTargetPosition(-ticks + FRM.getCurrentPosition());
