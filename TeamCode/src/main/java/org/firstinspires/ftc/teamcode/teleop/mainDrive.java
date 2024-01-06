@@ -38,6 +38,7 @@ public class mainDrive extends LinearOpMode {
     double directionMultiplier = 0.5;
     double intakePower = 1;
     double outtakePower = 1;
+    double driver_scaling_constant = 2;
 
 
     // default value
@@ -111,6 +112,9 @@ public class mainDrive extends LinearOpMode {
         double direction = Math.PI/2;
         double speed;
 
+
+        double scaling_constant = 1.0;
+
         boolean headlessMode = true;
 
         waitForStart();
@@ -133,6 +137,18 @@ public class mainDrive extends LinearOpMode {
             }
                 catch(RobotCoreException e){
             //}*/
+
+            //get joystick magnitudes, we are calculating a constant to fine tune rob to movement exponentially to the magnitude of the joystick
+            double right_joy_magnitude = Math.sqrt(Math.pow(gamepad1.right_stick_x, 2) + Math.pow(gamepad1.right_stick_y, 2));
+            double left_joy_magnitude = Math.sqrt(Math.pow(gamepad1.left_stick_x, 2) + Math.pow(gamepad1.left_stick_y, 2));
+
+            //apply magnitude curve for fine tuning movement
+            scaling_constant = Math.pow(left_joy_magnitude, driver_scaling_constant);
+
+            if (scaling_constant == 0.0)
+            {
+                scaling_constant = 1.0;
+            }
 
             if(currentGamePad1.right_bumper && !previousGamePad1.right_bumper){
                 headlessMode = !headlessMode;
@@ -235,6 +251,11 @@ public class mainDrive extends LinearOpMode {
                 FLPower = FLPower * scaleMultiplier;
                 BLPower = BLPower * scaleMultiplier;
 
+                FRPower = FRPower * scaling_constant;
+                BRPower = BRPower * scaling_constant;
+                FLPower = FLPower * scaling_constant;
+                BLPower = BLPower * scaling_constant;
+
                 FRM.setPower(FRPower);
                 BRM.setPower(BRPower);
                 FLM.setPower(FLPower);
@@ -308,6 +329,11 @@ public class mainDrive extends LinearOpMode {
                 FLPower = FLPower * scaleMultiplier;
                 BLPower = BLPower * scaleMultiplier;
 
+                FRPower = FRPower * scaling_constant;
+                BRPower = BRPower * scaling_constant;
+                FLPower = FLPower * scaling_constant;
+                BLPower = BLPower * scaling_constant;
+
                 FRM.setPower(FRPower);
                 BRM.setPower(BRPower);
                 FLM.setPower(FLPower);
@@ -320,6 +346,7 @@ public class mainDrive extends LinearOpMode {
             telemetry.addData("FLPower", FLPower);
             telemetry.addData("BLPower", BLPower);
             telemetry.addData("Heading", getAngle());
+            telemetry.addData("scaling_constant", scaling_constant);
             telemetry.addData("Direction of Driving Based on Robot", direction*180/Math.PI);
             telemetry.addData("Desired direction", Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x));
             telemetry.update();
