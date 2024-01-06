@@ -253,6 +253,7 @@ public class mainAutonomous extends LinearOpMode {
         sleep(1000);
 
         runStraight(60);
+        strafe(20, true);
     }
 
     private void BlueCenterSpike() {
@@ -412,16 +413,62 @@ public class mainAutonomous extends LinearOpMode {
         telemetry.addData("BLM", BLPower);
         telemetry.update();
 
+        FRM.setPower(0);
+        BRM.setPower(0);
+        FLM.setPower(0);
+        BLM.setPower(0);
+    }
 
-        while (FRM.isBusy() && BRM.isBusy() && FLM.isBusy() && BLM.isBusy()) {
-//
-//            telemetry.addData("FRM", FRM.getCurrentPosition() );
-//            telemetry.addData("FLM", FLM.getCurrentPosition() );
-//            telemetry.addData("BRM", BRM.getCurrentPosition() );
-//            telemetry.addData("BLM", BLM.getCurrentPosition() );
+    public void strafe (double centimeters, boolean left){
+        int ticks = CMtoTicks(centimeters);
 
-            telemetry.update();
+        FRM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        BRM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        FLM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        BLM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
+        FRM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        BRM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        FLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        BLM.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
+        if(left){
+            FRPower = autoPower;
+            FLPower = -autoPower;
+            BRPower = -autoPower;
+            BLPower = autoPower;
+
+            FRM.setTargetPosition(ticks + FRM.getCurrentPosition());
+            FLM.setTargetPosition(-ticks + FLM.getCurrentPosition());
+            BRM.setTargetPosition(-ticks + BRM.getCurrentPosition());
+            BLM.setTargetPosition(ticks + BLM.getCurrentPosition());
         }
+        else{
+            FRPower = -autoPower;
+            FLPower = autoPower;
+            BRPower = autoPower;
+            BLPower = -autoPower;
+
+            FRM.setTargetPosition(-ticks + FRM.getCurrentPosition());
+            FLM.setTargetPosition(ticks + FLM.getCurrentPosition());
+            BRM.setTargetPosition(ticks + BRM.getCurrentPosition());
+            BLM.setTargetPosition(-ticks + BLM.getCurrentPosition());
+        }
+        FLM.setPower(FLPower);
+        FRM.setPower(FRPower);
+        BLM.setPower(BLPower);
+        BRM.setPower(BRPower);
+
+        FRM.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        BRM.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        FLM.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        BLM.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+        telemetry.addData("FRM", FRPower);
+        telemetry.addData("FLM",FLPower);
+        telemetry.addData("BRM", BRPower);
+        telemetry.addData("BLM", BLPower);
+        telemetry.update();
 
         FRM.setPower(0);
         BRM.setPower(0);
