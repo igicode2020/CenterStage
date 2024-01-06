@@ -207,19 +207,23 @@ public class mainAutonomous extends LinearOpMode {
                 RedLeftSpike();
             }
 
-            if (side == "right") {
+            if (side == "left") {
                 runStraight(60);
             }
         }
         else {
             if (spikePosition == "right") {
-                RedRightSpike();
+                BlueRightSpike();
             }
             else if (spikePosition == "center") {
-                RedCenterSpike();
+                BlueCenterSpike();
             }
             else {
-                RedLeftSpike();
+                BlueLeftSpike();
+            }
+
+            if (side == "right") {
+                runStraight(110);
             }
         }
         // run a path based on sleeve recognition
@@ -234,61 +238,6 @@ public class mainAutonomous extends LinearOpMode {
         sleep(3000);
         wheelMotor.setPower(0);
     }
-    private void BlueRightSpike() {
-        runStraight(65);
-        sleep(1000);
-
-        turn(-90);
-        sleep(1000);
-        turn(0);
-        sleep(1000);
-        turn(0);
-        sleep(1000);
-
-        turn(180);
-        sleep(1000);
-        turn(0);
-        sleep(1000);
-        turn(0);
-        sleep(1000);
-
-        runStraight(60);
-        strafe(20, true);
-    }
-
-    private void BlueCenterSpike() {
-        runStraight(58);
-        sleep(1000);
-        runStraight(7);
-        sleep(1000);
-
-        turn(90);
-        sleep(1000);
-        turn(0);
-        sleep(1000);
-        turn(0);
-        sleep(1000);
-
-        runStraight(65);
-    }
-
-    private void BlueLeftSpike() {
-        runStraight(65);
-        sleep(1000);
-
-        turn(90);
-        sleep(1000);
-        turn(0);
-        sleep(1000);
-        turn(0);
-        sleep(1000);
-
-        // Need to fix this part
-        runStraight(-10);
-        sleep(1000);
-        runStraight(270);
-    }
-
     private void RedRightSpike() {
         runStraight(65);
         sleep(1000);
@@ -308,6 +257,7 @@ public class mainAutonomous extends LinearOpMode {
         sleep(1000);
 
         runStraight(60);
+        strafe(20, true);
     }
 
     private void RedCenterSpike() {
@@ -340,7 +290,67 @@ public class mainAutonomous extends LinearOpMode {
         // Need to fix this part
         runStraight(-10);
         sleep(1000);
+        runStraight(270);
+    }
+
+    private void BlueRightSpike() {
+        runStraight(65);
+        sleep(1000);
+
+        turn(-90);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        dropIntakePixel();
+
+        turn(180);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+
+        runStraight(60);
+        dropIntakePixel();
+    }
+
+    private void BlueCenterSpike() {
+        runStraight(58);
+        sleep(1000);
+        dropIntakePixel();
+        runStraight(7);
+        sleep(1000);
+
+        turn(90);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+
+        runStraight(65);
+        dropIntakePixel();
+    }
+
+    private void BlueLeftSpike() {
+        runStraight(65);
+        sleep(1000);
+
+        turn(90);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        turn(0);
+        sleep(1000);
+        dropIntakePixel();
+
+        // Need to fix this part
+        runStraight(-10);
+        sleep(1000);
         runStraight(70);
+        dropIntakePixel();
     }
 
 

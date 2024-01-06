@@ -209,9 +209,9 @@ public class mainDrive extends LinearOpMode {
                 }*/
                 // button a to toggle slug mode
 
-               /* if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {
+                if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {
                     slugMode = !slugMode;
-                }*/
+                }
 
                 // setting direction, atan2 gives back coordinates in radians, on the range of -pi to pi, (adj, opp)
                 direction = Math.atan2(-gamepad1.left_stick_y, gamepad1.left_stick_x) - (getAngle() * (Math.PI / 180));
