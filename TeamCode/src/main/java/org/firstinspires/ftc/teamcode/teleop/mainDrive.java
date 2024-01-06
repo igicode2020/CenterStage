@@ -20,10 +20,13 @@ public class mainDrive extends LinearOpMode {
     private DcMotor FLM = null;
     private DcMotor BLM = null;
 
+
     private DcMotor wheelMotor = null;
+    private DcMotor rampMotor = null;
 
-    private DcMotor slide = null;
-
+    // private DcMotor slide = null;
+    // private CRServo boxRotator = null;
+    private CRServo boxOpener = null;
     double scaleMultiplier = 0.6;
 
     double FRPower, BRPower, FLPower, BLPower;
@@ -35,6 +38,7 @@ public class mainDrive extends LinearOpMode {
     double directionMultiplier = 0.5;
     double intakePower = 1;
     double outtakePower = 1;
+
 
     // default value
     double slide_encoder_value = 0;
@@ -59,7 +63,10 @@ public class mainDrive extends LinearOpMode {
         BRM = hardwareMap.get(DcMotorEx.class, "backRight");
         FLM = hardwareMap.get(DcMotorEx.class, "frontLeft");
         BLM = hardwareMap.get(DcMotorEx.class, "backLeft");
+        // boxRotator = hardwareMap.get(CRServo.class,"boxRotator");
+        // boxOpener = hardwareMap.get(CRServo.class, "boxOpener");
         wheelMotor = hardwareMap.get(DcMotorEx.class, "wheelMotor");
+        rampMotor = hardwareMap.get(DcMotorEx.class, "rampMotor");
         // slide = hardwareMap.get(DcMotorEx.class, "liftMotor");
 
         //GamePads to save previous state of gamepad for button toggling
@@ -80,6 +87,7 @@ public class mainDrive extends LinearOpMode {
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         wheelMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         // slide.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
@@ -144,30 +152,50 @@ public class mainDrive extends LinearOpMode {
                     imu.initialize(parameters);
                 }
 
-                if (currentGamePad1.dpad_down) {
+
+                if (currentGamePad2.dpad_down) {
                     wheelMotor.setPower(wheelMotorPower);
                 }
-                else if (currentGamePad1.dpad_up) {
+                else if (currentGamePad2.dpad_up) {
                     wheelMotor.setPower(-wheelMotorPower);
                 }
                 else {
                     wheelMotor.setPower(0);
                 }
 
-                /*if (currentGamePad1.right_trigger > 0) {
-                    slide.setPower(currentGamePad1.right_trigger);
+                if (currentGamePad2.right_trigger > 0) {
+                    rampMotor.setPower(0.5);
+                }
+                else if (currentGamePad2.left_trigger > 0) {
+                    rampMotor.setPower(-0.5);
+                }
+                else {
+                    rampMotor.setPower(0);
+                }
+                /* if (currentGamePad1.right_trigger > 0) {
+                    // slide.setPower(currentGamePad1.right_trigger);
                 }
                 else if (currentGamePad1.left_trigger > 0) {
-                    slide.setPower(currentGamePad1.left_trigger);
+                    slide.setPower(-currentGamePad1.left_trigger);
                 }
                 else {
                     slide.setPower(0);
                 }*/
 
-                // button a to toggle slug mode
-                if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {
-                    slugMode = !slugMode;
+                /*if (currentGamePad1.right_bumper) {
+                    boxRotator.setPower(1);
                 }
+                else if (currentGamePad1.left_bumper) {
+                    boxRotator.setPower(-1);
+                }
+                else {
+                    boxRotator.setPower(0);
+                }*/
+                // button a to toggle slug mode
+
+               /* if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {
+                    slugMode = !slugMode;
+                }*/
 
                 // setting direction, atan2 gives back coordinates in radians, on the range of -pi to pi, (adj, opp)
                 direction = Math.atan2(-gamepad1.left_stick_y, gamepad1.left_stick_x) - (getAngle() * (Math.PI / 180));
@@ -222,21 +250,41 @@ public class mainDrive extends LinearOpMode {
                     slide.setPower(currentGamePad1.right_trigger);
                 }
                 else if (currentGamePad1.left_trigger > 0) {
-                    slide.setPower(currentGamePad1.left_trigger);
+                    slide.setPower(-currentGamePad1.left_trigger);
                 }
                 else {
                     slide.setPower(0);
                 }*/
 
-                if (currentGamePad1.dpad_down) {
+                if (currentGamePad2.dpad_down) {
                     wheelMotor.setPower(wheelMotorPower);
                 }
-                else if (currentGamePad1.dpad_up) {
+                else if (currentGamePad2.dpad_up) {
                     wheelMotor.setPower(-wheelMotorPower);
                 }
                 else {
                     wheelMotor.setPower(0);
                 }
+
+                if (currentGamePad2.right_trigger > 0) {
+                    rampMotor.setPower(0.5);
+                }
+                else if (currentGamePad2.right_trigger < 0) {
+                    rampMotor.setPower(-0.5);
+                }
+                else {
+                    rampMotor.setPower(0);
+                }
+
+                /*if (currentGamePad1.right_bumper) {
+                    boxRotator.setPower(0.5);
+                }
+                else if (currentGamePad1.left_bumper) {
+                    boxRotator.setPower(-0.5);
+                }
+                else {
+                    boxRotator.setPower(0);
+                }*/
 
                 double x = gamepad1.left_stick_x;
                 double y = -gamepad1.left_stick_y;
@@ -265,6 +313,7 @@ public class mainDrive extends LinearOpMode {
                 FLM.setPower(FLPower);
                 BLM.setPower(BLPower);
             }
+
 
             telemetry.addData("FRPower", FRPower);
             telemetry.addData("BRPower", BRPower);

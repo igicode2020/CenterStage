@@ -29,6 +29,8 @@ public class mainAutonomous extends LinearOpMode {
     private DcMotorEx BRM = null; // V4
     private DcMotorEx FLM = null; // V1
     private DcMotorEx BLM = null; // V3
+    private DcMotorEx wheelMotor = null;
+    private DcMotorEx rampMotor = null;
     private CRServo rightIntake = null;
     private CRServo leftIntake  = null;
 
@@ -39,6 +41,14 @@ public class mainAutonomous extends LinearOpMode {
     double starting_time = 0;
 
     //power variables
+
+    // placement variables
+    boolean modeSelected = false;
+    // 0 means not selected, 1 is blue, -1 is red
+    double blue = 0;
+    // values "left", and "right"
+    String side = "none";
+
     double FRPower, BRPower, FLPower, BLPower;
     double speed = 0.5;
     double turningPower = 0.4; // 0.22
@@ -65,7 +75,7 @@ public class mainAutonomous extends LinearOpMode {
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
     // TFOD_MODEL_ASSET points to a model file stored in the project Asset location,
     // this is only used for Android Studio when using models in Assets.
-    private static final String TFOD_MODEL_ASSET = "redball.tflite";
+    private static final String TFOD_MODEL_ASSET = "NewRedBallModel.tflite";
     // TFOD_MODEL_FILE points to a model file stored onboard the Robot Controller's storage,
     // this is used when uploading models directly to the RC using the model upload interface.
     private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/redball.tflite";
@@ -78,6 +88,41 @@ public class mainAutonomous extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+        Gamepad previousGamePad1 = new Gamepad();
+        Gamepad currentGamePad1 = new Gamepad();
+
+        // left dpad is left
+        // right dpad is right
+        // up dpad is blue
+        // down dpad is red
+        while (!modeSelected) {
+            previousGamePad1.copy(currentGamePad1);
+            currentGamePad1.copy(gamepad1);
+            telemetry.addData("Side", side);
+            telemetry.addData("Color", blue);
+            telemetry.addData("Status", "Select side and color using dpad");
+            telemetry.update();
+
+            if (currentGamePad1.dpad_up && blue == 0) {
+                blue = 1;
+            }
+            else if (currentGamePad1.dpad_down && blue == 0){
+                blue = -1;
+            }
+
+            if (currentGamePad1.dpad_left && side == "none") {
+                side = "left";
+            }
+            else if (currentGamePad1.dpad_right && side == "none") {
+                side = "right";
+            }
+
+            if (blue != 0 && side != "none") {
+                modeSelected = true;
+            }
+        }
+
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
@@ -111,8 +156,9 @@ public class mainAutonomous extends LinearOpMode {
         BRM = hardwareMap.get(DcMotorEx.class, "backRight");
         FLM = hardwareMap.get(DcMotorEx.class, "frontLeft");
         BLM = hardwareMap.get(DcMotorEx.class, "backLeft");
-        // rightIntake = hardwareMap.get(CRServo.class,"WheelRight");
-        // leftIntake = hardwareMap.get(CRServo.class,"WheelLeft");
+        wheelMotor = hardwareMap.get(DcMotorEx.class, "wheelMotor");
+        rampMotor = hardwareMap.get(DcMotorEx.class, "rampMotor");
+
 
         // Setting parameters for imu
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -143,18 +189,39 @@ public class mainAutonomous extends LinearOpMode {
         BRM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        wheelMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        if (spikePosition == "right") {
-            DropRightSpike();
-        }
-        else if (spikePosition == "center") {
-            DropCenterSpike();
+        rampMotor.setPower(-0.5);
+        sleep(1000);
+        rampMotor.setPower(0);
+
+        if (blue == -1) {
+            if (spikePosition == "right") {
+                RedRightSpike();
+            }
+            else if (spikePosition == "center") {
+                RedCenterSpike();
+            }
+            else {
+                RedLeftSpike();
+            }
+
+            if (side == "right") {
+                runStraight(60);
+            }
         }
         else {
-            DropLeftSpike();
+            if (spikePosition == "right") {
+                RedRightSpike();
+            }
+            else if (spikePosition == "center") {
+                RedCenterSpike();
+            }
+            else {
+                RedLeftSpike();
+            }
         }
-
-
         // run a path based on sleeve recognition
     }
 
@@ -162,7 +229,12 @@ public class mainAutonomous extends LinearOpMode {
     // counter-clockwise is positive
     // x ticks - 60.96 cm
 
-    private void OpRightSpike() {
+    private void dropIntakePixel() {
+        wheelMotor.setPower(1);
+        sleep(3000);
+        wheelMotor.setPower(0);
+    }
+    private void BlueRightSpike() {
         runStraight(65);
         sleep(1000);
 
@@ -183,7 +255,7 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(60);
     }
 
-    private void OpCenterSpike() {
+    private void BlueCenterSpike() {
         runStraight(58);
         sleep(1000);
         runStraight(7);
@@ -199,7 +271,7 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(65);
     }
 
-    private void OpLeftSpike() {
+    private void BlueLeftSpike() {
         runStraight(65);
         sleep(1000);
 
@@ -216,7 +288,7 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(270);
     }
 
-    private void DropRightSpike() {
+    private void RedRightSpike() {
         runStraight(65);
         sleep(1000);
 
@@ -237,7 +309,7 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(60);
     }
 
-    private void DropCenterSpike() {
+    private void RedCenterSpike() {
         runStraight(58);
         sleep(1000);
         runStraight(7);
@@ -253,7 +325,7 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(65);
     }
 
-    private void DropLeftSpike() {
+    private void RedLeftSpike() {
         runStraight(65);
         sleep(1000);
 
