@@ -27,7 +27,7 @@ public class mainDrive extends LinearOpMode {
     // private DcMotor slide = null;
     // private CRServo boxRotator = null;
     private CRServo boxOpener = null;
-    double scaleMultiplier = 0.6;
+    double scaleMultiplier = 1;
 
     double FRPower, BRPower, FLPower, BLPower;
 
@@ -92,7 +92,7 @@ public class mainDrive extends LinearOpMode {
         // slide.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
-        FRM.setDirection(DcMotorEx.Direction.REVERSE);
+        // FRM.setDirection(DcMotorEx.Direction.REVERSE); reversed after changes
 
         // Setting parameters for imu
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();

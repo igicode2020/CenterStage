@@ -78,7 +78,7 @@ public class mainAutonomous extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "NewRedBallModel.tflite";
     // TFOD_MODEL_FILE points to a model file stored onboard the Robot Controller's storage,
     // this is used when uploading models directly to the RC using the model upload interface.
-    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/NewRedBallModell.tflite";
+    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/NewRedBallModel.tflite";
     // Define the labels recognized in the model for TFOD (must be in training order!)
     private static final String[] LABELS = {
             "redball",
@@ -193,8 +193,10 @@ public class mainAutonomous extends LinearOpMode {
         rampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         rampMotor.setPower(-0.5);
-        sleep(1000);
+        sleep(500);
         rampMotor.setPower(0);
+
+        // test different spike positions
 
         if (blue == -1) {
             if (spikePosition == "right") {
@@ -208,8 +210,9 @@ public class mainAutonomous extends LinearOpMode {
             }
 
             if (side == "left") {
-                runStraight(60);
+                runStraight(110);
             }
+
         }
         else {
             if (spikePosition == "right") {
@@ -226,9 +229,22 @@ public class mainAutonomous extends LinearOpMode {
                 runStraight(110);
             }
         }
+
+        if (blue == 1) {
+            strafe(20, true);
+            runStraight(80);
+            dropIntakePixel();
+        }
+        else {
+            strafe(20, false);
+            runStraight(80);
+            dropIntakePixel();
+        }
+
         // run a path based on sleeve recognition
     }
 
+    // runStraight(30)
     // 132 cm is 1 foot
     // counter-clockwise is positive
     // x ticks - 60.96 cm
@@ -238,79 +254,90 @@ public class mainAutonomous extends LinearOpMode {
         sleep(3000);
         wheelMotor.setPower(0);
     }
+    // turn all red turns negative
+    // change first turn 90 to -90
     private void RedRightSpike() {
         runStraight(65);
-        sleep(1000);
+        sleep(500);
 
-        turn(-90);
-        sleep(1000);
+        turn(90);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
+        runStraight(65);
 
         turn(180);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        dropIntakePixel();
+        turn(-180);
+        sleep(500);
+        turn(0);
+        sleep(500);
+        turn(0);
 
-        runStraight(60);
-        strafe(20, true);
+        // Need to fix this part
+        runStraight(-10);
+        sleep(500);
+        runStraight(70);
+        dropIntakePixel();
     }
 
     private void RedCenterSpike() {
         runStraight(58);
-        sleep(1000);
+        sleep(500);
         runStraight(7);
-        sleep(1000);
+        sleep(500);
 
         turn(90);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
 
         runStraight(65);
     }
 
-    private void RedLeftSpike() {
+    private void RedLeftSpike() { // similar to blue right, but slightly closer
         runStraight(65);
-        sleep(1000);
+        sleep(500);
 
         turn(90);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
 
         // Need to fix this part
         runStraight(-10);
-        sleep(1000);
+        sleep(500);
         runStraight(270);
     }
 
-    private void BlueRightSpike() {
+    private void BlueRightSpike() { // similar to blue left, but slightly closer
         runStraight(65);
-        sleep(1000);
+        sleep(500);
 
         turn(-90);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         dropIntakePixel();
 
         turn(180);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
 
         runStraight(60);
         dropIntakePixel();
@@ -318,17 +345,17 @@ public class mainAutonomous extends LinearOpMode {
 
     private void BlueCenterSpike() {
         runStraight(58);
-        sleep(1000);
+        sleep(500);
         dropIntakePixel();
         runStraight(7);
-        sleep(1000);
+        sleep(500);
 
         turn(90);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
 
         runStraight(65);
         dropIntakePixel();
@@ -336,25 +363,34 @@ public class mainAutonomous extends LinearOpMode {
 
     private void BlueLeftSpike() {
         runStraight(65);
-        sleep(1000);
+        sleep(500);
 
         turn(90);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
         turn(0);
-        sleep(1000);
+        sleep(500);
+        runStraight(65);
+
+        turn(180);
+        sleep(500);
+        turn(0);
+        sleep(500);
+        turn(0);
         dropIntakePixel();
+        turn(-180);
+        sleep(500);
+        turn(0);
+        sleep(500);
+        turn(0);
 
         // Need to fix this part
         runStraight(-10);
-        sleep(1000);
+        sleep(500);
         runStraight(70);
         dropIntakePixel();
     }
-
-
-
 
     public int CMtoTicks(double DistanceCM){
         return (int) (DistanceCM * 4.94);
