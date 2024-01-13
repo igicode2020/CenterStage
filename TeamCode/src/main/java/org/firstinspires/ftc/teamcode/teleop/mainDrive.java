@@ -180,15 +180,15 @@ public class mainDrive extends LinearOpMode {
                 }
 
                 if (currentGamePad2.right_trigger > 0) {
-                    rampMotor.setPower(0.5);
+                    rampMotor.setPower(1);
                 }
                 else if (currentGamePad2.left_trigger > 0) {
-                    rampMotor.setPower(-0.5);
+                    rampMotor.setPower(-1);
                 }
                 else {
                     rampMotor.setPower(0);
                 }
-                /* if (currentGamePad1.right_trigger > 0) {
+                /*if (currentGamePad1.right_trigger > 0) {
                     // slide.setPower(currentGamePad1.right_trigger);
                 }
                 else if (currentGamePad1.left_trigger > 0) {
@@ -206,7 +206,7 @@ public class mainDrive extends LinearOpMode {
                 }
                 else {
                     boxRotator.setPower(0);
-                }*/
+                }
                 // button a to toggle slug mode
 
                 if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {

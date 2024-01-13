@@ -51,11 +51,11 @@ public class mainAutonomous extends LinearOpMode {
 
     double FRPower, BRPower, FLPower, BLPower;
     double speed = 0.5;
-    double turningPower = 0.4; // 0.22
+    double turningPower = 1; // 0.22
     double initialTurningVelocity = 200; // 150
     double turningVelocity;
     double errorMargin = 0.5; // degrees
-    double autoPower = 0.15;
+    double autoPower = 0.7;
     double theoreticalAngle;
 
     // object detection cases (Left perspective looking at field from starting point)
@@ -75,10 +75,10 @@ public class mainAutonomous extends LinearOpMode {
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
     // TFOD_MODEL_ASSET points to a model file stored in the project Asset location,
     // this is only used for Android Studio when using models in Assets.
-    private static final String TFOD_MODEL_ASSET = "NewRedBallModel.tflite";
+    private static final String TFOD_MODEL_ASSET = "redballv3.tflite";
     // TFOD_MODEL_FILE points to a model file stored onboard the Robot Controller's storage,
     // this is used when uploading models directly to the RC using the model upload interface.
-    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/NewRedBallModel.tflite";
+    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/redballv2.tflite";
     // Define the labels recognized in the model for TFOD (must be in training order!)
     private static final String[] LABELS = {
             "redball",
@@ -176,7 +176,7 @@ public class mainAutonomous extends LinearOpMode {
         theoreticalAngle = getAngle();
 
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
-        FRM.setDirection(DcMotorEx.Direction.REVERSE);
+        // FRM.setDirection(DcMotorEx.Direction.REVERSE); reversed after changes
 
         // leftIntake.setDirection(CRServo.Direction.REVERSE);
 
@@ -195,8 +195,10 @@ public class mainAutonomous extends LinearOpMode {
         rampMotor.setPower(-0.5);
         sleep(500);
         rampMotor.setPower(0);
-
         // test different spike positions
+
+        // use spikePositions as center
+        spikePosition = "center";
 
         if (blue == -1) {
             if (spikePosition == "right") {
@@ -209,38 +211,36 @@ public class mainAutonomous extends LinearOpMode {
                 RedLeftSpike();
             }
 
-            if (side == "left") {
-                runStraight(110);
-            }
-
         }
         else {
             if (spikePosition == "right") {
                 BlueRightSpike();
             }
             else if (spikePosition == "center") {
-                BlueCenterSpike();
+               BlueCenterSpike();
             }
             else {
                 BlueLeftSpike();
             }
 
-            if (side == "right") {
-                runStraight(110);
+        }
+
+        if (side == "right")
+        {
+            runStraight(111.2);
+            sleep(1000);
+            turn(0);
+            /*if (blue == 1) {
+                runStraight(121.2); // 2 blocks
             }
+            else {
+                runStraight(111.2);
+            }*/
+
         }
 
-        if (blue == 1) {
-            strafe(20, true);
-            runStraight(80);
-            dropIntakePixel();
-        }
-        else {
-            strafe(20, false);
-            runStraight(80);
-            dropIntakePixel();
-        }
-
+        runStraight(112);
+        dropIntakePixel(3000);
         // run a path based on sleeve recognition
     }
 
@@ -249,9 +249,9 @@ public class mainAutonomous extends LinearOpMode {
     // counter-clockwise is positive
     // x ticks - 60.96 cm
 
-    private void dropIntakePixel() {
-        wheelMotor.setPower(1);
-        sleep(3000);
+    private void dropIntakePixel(int time) {
+        wheelMotor.setPower(-0.7);
+        sleep(time);
         wheelMotor.setPower(0);
     }
     // turn all red turns negative
@@ -266,14 +266,14 @@ public class mainAutonomous extends LinearOpMode {
         sleep(500);
         turn(0);
         sleep(500);
-        runStraight(65);
+        runStraight(70);
 
         turn(180);
         sleep(500);
         turn(0);
         sleep(500);
         turn(0);
-        dropIntakePixel();
+        dropIntakePixel(500);
         turn(-180);
         sleep(500);
         turn(0);
@@ -284,11 +284,19 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(-10);
         sleep(500);
         runStraight(70);
-        dropIntakePixel();
+        dropIntakePixel(500);
     }
 
     private void RedCenterSpike() {
-        runStraight(58);
+        runStraight(5);
+
+        turn(-90);
+        sleep(500);
+        turn(0);
+        sleep(500);
+        turn(0);
+        sleep(500);
+        /*runStraight(58);
         sleep(500);
         runStraight(7);
         sleep(500);
@@ -300,7 +308,7 @@ public class mainAutonomous extends LinearOpMode {
         turn(0);
         sleep(500);
 
-        runStraight(65);
+        runStraight(65);*/
     }
 
     private void RedLeftSpike() { // similar to blue right, but slightly closer
@@ -318,6 +326,8 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(-10);
         sleep(500);
         runStraight(270);
+
+        strafe(60, true);
     }
 
     private void BlueRightSpike() { // similar to blue left, but slightly closer
@@ -330,7 +340,7 @@ public class mainAutonomous extends LinearOpMode {
         sleep(500);
         turn(0);
         sleep(500);
-        dropIntakePixel();
+        dropIntakePixel(2000);
 
         turn(180);
         sleep(500);
@@ -339,15 +349,22 @@ public class mainAutonomous extends LinearOpMode {
         turn(0);
         sleep(500);
 
-        runStraight(60);
-        dropIntakePixel();
+        strafe(73, true);
+        turn(0);
     }
 
     private void BlueCenterSpike() {
-        runStraight(58);
+        runStraight(5);
+
+        turn(90);
         sleep(500);
-        dropIntakePixel();
-        runStraight(7);
+        turn(0);
+        sleep(500);
+        turn(0);
+        sleep(500);
+        /*runStraight(65);
+        sleep(500);
+        dropIntakePixel(500);
         sleep(500);
 
         turn(90);
@@ -357,8 +374,7 @@ public class mainAutonomous extends LinearOpMode {
         turn(0);
         sleep(500);
 
-        runStraight(65);
-        dropIntakePixel();
+        strafe(73, true);*/
     }
 
     private void BlueLeftSpike() {
@@ -371,14 +387,29 @@ public class mainAutonomous extends LinearOpMode {
         sleep(500);
         turn(0);
         sleep(500);
-        runStraight(65);
+        dropIntakePixel(500);
 
+        runStraight(5);
+        strafe(73, true);
+
+        /*
+        runStraight(65);
+        sleep(500);
+
+        turn(90);
+        sleep(500);
+        turn(0);
+        sleep(500);
+        turn(0);
+        sleep(500);
+        runStraight(65);
+        
         turn(180);
         sleep(500);
         turn(0);
         sleep(500);
         turn(0);
-        dropIntakePixel();
+        dropIntakePixel(500);
         turn(-180);
         sleep(500);
         turn(0);
@@ -389,13 +420,16 @@ public class mainAutonomous extends LinearOpMode {
         runStraight(-10);
         sleep(500);
         runStraight(70);
-        dropIntakePixel();
-    }
+        dropIntakePixel(500);
 
+        strafe(60, true);*/
+    }
     public int CMtoTicks(double DistanceCM){
-        return (int) (DistanceCM * 4.94);
+        return (int) (DistanceCM * 16.148);
+        // return (int) (DistanceCM * 4.94); // previous
         // return (int) (DistanceCM * 21.32 * 1);
         // for original programming bot motors,
+        // 980 ticks per centimeter/60.96 =
         // - 300 ticks is 2 feet/60.96 for new robot - 4.94 ticks is 1 cm
         // - 1300 ticks is 2 feet/60.96 cm old robot
     }
@@ -453,11 +487,14 @@ public class mainAutonomous extends LinearOpMode {
         FLM.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         BLM.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
-        telemetry.addData("FRM", FRPower);
-        telemetry.addData("FLM",FLPower);
-        telemetry.addData("BRM", BRPower);
-        telemetry.addData("BLM", BLPower);
-        telemetry.update();
+        while (FRM.isBusy() && BRM.isBusy() && FLM.isBusy() && BLM.isBusy())
+        {
+            telemetry.addData("FRM", FRPower);
+            telemetry.addData("FLM",FLPower);
+            telemetry.addData("BRM", BRPower);
+            telemetry.addData("BLM", BLPower);
+            telemetry.update();
+        }
 
         FRM.setPower(0);
         BRM.setPower(0);
@@ -510,11 +547,14 @@ public class mainAutonomous extends LinearOpMode {
         FLM.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         BLM.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
-        telemetry.addData("FRM", FRPower);
-        telemetry.addData("FLM",FLPower);
-        telemetry.addData("BRM", BRPower);
-        telemetry.addData("BLM", BLPower);
-        telemetry.update();
+        while (FRM.isBusy() && BRM.isBusy() && FLM.isBusy() && BLM.isBusy())
+        {
+            telemetry.addData("FRM", FRPower);
+            telemetry.addData("FLM",FLPower);
+            telemetry.addData("BRM", BRPower);
+            telemetry.addData("BLM", BLPower);
+            telemetry.update();
+        }
 
         FRM.setPower(0);
         BRM.setPower(0);
