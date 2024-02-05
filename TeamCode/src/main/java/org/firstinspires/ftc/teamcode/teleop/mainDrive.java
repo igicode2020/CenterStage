@@ -39,6 +39,9 @@ public class mainDrive extends LinearOpMode {
     double directionMultiplier = 0.5;
     double intakePower = 1;
     double outtakePower = 1;
+
+    //adjust this to driver preference, 1 is perfectly linear (no curve adjustement from default), larger values make the dip more extreme,
+    //dont go below 1 unless its for fun
     double driver_scaling_constant = 2;
 
     // default value
@@ -121,6 +124,7 @@ public class mainDrive extends LinearOpMode {
         double speed;
 
 
+        //scaling constant default for joystick's tuned scaling curve, dont change from 1 unless you know what you're doing but really it doesnt make sense to
         double scaling_constant = 1.0;
 
         boolean headlessMode = true;
