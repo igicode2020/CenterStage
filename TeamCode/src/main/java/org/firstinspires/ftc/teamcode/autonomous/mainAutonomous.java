@@ -3,19 +3,14 @@ import android.util.Size;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.exception.RobotCoreException;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.navigation.*;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.tfod.TfodProcessor;
 
@@ -57,7 +52,6 @@ public class mainAutonomous extends LinearOpMode {
     double errorMargin = 0.5; // degrees
     double autoPower = 0.7;
     double theoreticalAngle;
-
     // object detection cases (Left perspective looking at field from starting point)
     String spikePosition = "left";
     private TfodProcessor tfod;
@@ -75,15 +69,16 @@ public class mainAutonomous extends LinearOpMode {
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
     // TFOD_MODEL_ASSET points to a model file stored in the project Asset location,
     // this is only used for Android Studio when using models in Assets.
-    private static final String TFOD_MODEL_ASSET = "redballv3.tflite";
+    String TFOD_MODEL_ASSET;
     // TFOD_MODEL_FILE points to a model file stored onboard the Robot Controller's storage,
     // this is used when uploading models directly to the RC using the model upload interface.
-    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/redballv2.tflite";
+    private static final String TFOD_MODEL_FILE = "/sdcard/FIRST/tflitemodels/niceblueball.tflite";
     // Define the labels recognized in the model for TFOD (must be in training order!)
     private static final String[] LABELS = {
             "redball",
     };
     private VisionPortal visionPortal;
+
     double maxConfidence;
 
     @Override
@@ -130,6 +125,13 @@ public class mainAutonomous extends LinearOpMode {
         telemetry.addData("Status", "Tfod Initialized");
         telemetry.update();
 
+        if (blue == 1) {
+            TFOD_MODEL_ASSET = "niceblueball.tflite";
+        }
+        else {
+            TFOD_MODEL_ASSET = "niceredball.tflite";
+        }
+
         while (!opModeIsActive()) {
             telemetryTfod();
             // Push telemetry to the Driver Station.
@@ -156,8 +158,8 @@ public class mainAutonomous extends LinearOpMode {
         BRM = hardwareMap.get(DcMotorEx.class, "backRight");
         FLM = hardwareMap.get(DcMotorEx.class, "frontLeft");
         BLM = hardwareMap.get(DcMotorEx.class, "backLeft");
-        wheelMotor = hardwareMap.get(DcMotorEx.class, "wheelMotor");
-        rampMotor = hardwareMap.get(DcMotorEx.class, "rampMotor");
+        // wheelMotor = hardwareMap.get(DcMotorEx.class, "wheelMotor");
+        // rampMotor = hardwareMap.get(DcMotorEx.class, "rampMotor");
 
 
         // Setting parameters for imu
@@ -175,8 +177,13 @@ public class mainAutonomous extends LinearOpMode {
         imu.initialize(parameters);
         theoreticalAngle = getAngle();
 
+        // For prgoramming robot, reverse front right
+        FRM.setDirection(DcMotorEx.Direction.REVERSE);
+        //
+        // BLM.setDirection(DcMotorEx.Direction.REVERSE);
+        // BRM.setDirection(DcMotorEx.Direction.REVERSE);
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
-        // FRM.setDirection(DcMotorEx.Direction.REVERSE); reversed after changes
+        // FRM.setDirection(DcMotorEx.Direction.REVERSE);
 
         // leftIntake.setDirection(CRServo.Direction.REVERSE);
 
@@ -189,12 +196,12 @@ public class mainAutonomous extends LinearOpMode {
         BRM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        wheelMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        rampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        // wheelMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        // rampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        rampMotor.setPower(-0.5);
-        sleep(500);
-        rampMotor.setPower(0);
+        // rampMotor.setPower(-0.5);
+        // sleep(500);
+        // rampMotor.setPower(0);
         // test different spike positions
 
         // use spikePositions as center
@@ -227,7 +234,7 @@ public class mainAutonomous extends LinearOpMode {
 
         if (side == "right")
         {
-            runStraight(111.2);
+            runStraight(113.2);
             sleep(1000);
             turn(0);
             /*if (blue == 1) {
@@ -288,7 +295,7 @@ public class mainAutonomous extends LinearOpMode {
     }
 
     private void RedCenterSpike() {
-        runStraight(5);
+        runStraight(6.5);
 
         turn(-90);
         sleep(500);
@@ -354,7 +361,7 @@ public class mainAutonomous extends LinearOpMode {
     }
 
     private void BlueCenterSpike() {
-        runStraight(5);
+        runStraight(6.5);
 
         turn(90);
         sleep(500);
@@ -437,6 +444,7 @@ public class mainAutonomous extends LinearOpMode {
     public void runStraight(double centimeters) {
         int ticks = CMtoTicks(centimeters);
 
+        FRM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         FRM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         BRM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         FLM.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -657,7 +665,7 @@ public class mainAutonomous extends LinearOpMode {
             // first is the x
             // 484
 
-            if ((recognition.getConfidence() > maxConfidence) && (recognition.getWidth() < 120) && (recognition.getHeight() < 120)) {
+            if ((recognition.getConfidence() > maxConfidence) && (recognition.getWidth() < 100) && (recognition.getHeight() < 100)) {
                 telemetry.addData("Confident Detection", maxConfidence);
                 maxConfidence = recognition.getConfidence();
                 max_index = currentRecognitions.indexOf(recognition);
@@ -742,7 +750,7 @@ public class mainAutonomous extends LinearOpMode {
         visionPortal = builder.build();
 
         // Set confidence threshold for TFOD recognitions, at any time.
-        tfod.setMinResultConfidence(0.60f); // default is .75
+        tfod.setMinResultConfidence(0.40f); // default is .75
 
         // Disable or re-enable the TFOD processor at any time.
         //visionPortal.setProcessorEnabled(tfod, true);

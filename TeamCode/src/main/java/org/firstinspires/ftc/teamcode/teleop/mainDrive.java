@@ -20,26 +20,26 @@ public class mainDrive extends LinearOpMode {
     private DcMotor FLM = null;
     private DcMotor BLM = null;
 
-
     private DcMotor wheelMotor = null;
     private DcMotor rampMotor = null;
-
+    private DcMotor actuatorMotor = null;
+    private DcMotor slide = null;
     // private DcMotor slide = null;
     // private CRServo boxRotator = null;
     private CRServo boxOpener = null;
+    private CRServo airplaneLauncher = null;
+    private CRServo boxRotator = null;
     double scaleMultiplier = 1;
 
     double FRPower, BRPower, FLPower, BLPower;
 
     double wheelMotorPower = 1;
 
-
     //set constants
     double directionMultiplier = 0.5;
     double intakePower = 1;
     double outtakePower = 1;
     double driver_scaling_constant = 2;
-
 
     // default value
     double slide_encoder_value = 0;
@@ -64,11 +64,13 @@ public class mainDrive extends LinearOpMode {
         BRM = hardwareMap.get(DcMotorEx.class, "backRight");
         FLM = hardwareMap.get(DcMotorEx.class, "frontLeft");
         BLM = hardwareMap.get(DcMotorEx.class, "backLeft");
-        // boxRotator = hardwareMap.get(CRServo.class,"boxRotator");
-        // boxOpener = hardwareMap.get(CRServo.class, "boxOpener");
+        boxRotator = hardwareMap.get(CRServo.class,"boxRotator");
+        boxOpener = hardwareMap.get(CRServo.class, "boxOpener");
         wheelMotor = hardwareMap.get(DcMotorEx.class, "wheelMotor");
-        rampMotor = hardwareMap.get(DcMotorEx.class, "rampMotor");
-        // slide = hardwareMap.get(DcMotorEx.class, "liftMotor");
+        // rampMotor = hardwareMap.get(DcMotorEx.class, "rampMotor");
+        // airplaneLauncher = hardwareMap.get(CRServo.class, "airplaneLauncher");
+        slide = hardwareMap.get(DcMotorEx.class, "liftMotor");
+        // actuatorMotor = hardwareMap.get(DcMotorEx.class, "actuatorMotor");
 
         //GamePads to save previous state of gamepad for button toggling
         Gamepad previousGamePad1 = new Gamepad();
@@ -87,12 +89,18 @@ public class mainDrive extends LinearOpMode {
         BRM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        // actuatorMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         wheelMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        rampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        // slide.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        // rampMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        slide.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
+        // For prgoramming robot, reverse front right
+        // FRM.setDirection(DcMotorEx.Direction.REVERSE);
+        //
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
-        // FRM.setDirection(DcMotorEx.Direction.REVERSE); reversed after changes
+        // BLM.setDirection(DcMotorEx.Direction.REVERSE);
+        // BRM.setDirection(DcMotorEx.Direction.REVERSE);
+        // FRM.setDirection(DcMotorEx.Direction.REVERSE);
 
         // Setting parameters for imu
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -158,7 +166,7 @@ public class mainDrive extends LinearOpMode {
                 telemetry.addData("Right trigger", currentGamePad2.right_trigger);
                 telemetry.addData("Left trigger", currentGamePad2.left_trigger);
 
-                //start button will reset the robot heading
+                // start button will reset the robot heading
                 if (currentGamePad1.start && !previousGamePad1.start) {
                     parameters = new BNO055IMU.Parameters();
                     parameters.mode = BNO055IMU.SensorMode.IMU;
@@ -168,18 +176,59 @@ public class mainDrive extends LinearOpMode {
                     imu.initialize(parameters);
                 }
 
+                if (currentGamePad2.right_trigger > 0) {
+                    slide.setPower(1);
+                }
+                else if (currentGamePad2.left_trigger > 0) {
+                    slide.setPower(-1);
+                }
+                else {
+                    slide.setPower(0);
+                }
 
                 if (currentGamePad2.dpad_down) {
-                    wheelMotor.setPower(wheelMotorPower);
+                    wheelMotor.setPower(0.8 * wheelMotorPower);
                 }
                 else if (currentGamePad2.dpad_up) {
-                    wheelMotor.setPower(-wheelMotorPower);
+                    wheelMotor.setPower(-0.8 * wheelMotorPower);
                 }
                 else {
                     wheelMotor.setPower(0);
                 }
 
-                if (currentGamePad2.right_trigger > 0) {
+                if (currentGamePad2.right_bumper && !currentGamePad2.left_bumper) {
+                    boxRotator.setPower(0.2);
+                }
+                else if (currentGamePad2.left_bumper && currentGamePad2.right_bumper ) {
+                    boxRotator.setPower(0.8);
+                }
+                else {
+                    boxRotator.setPower(0.5);
+                }
+
+
+                if (currentGamePad2.a) {
+                    boxOpener.setPower(1);
+                }
+                else if (currentGamePad2.y) {
+                    boxOpener.setPower(-1);
+                }
+                else {
+                    boxOpener.setPower(0);
+                }
+
+
+                /*if (currentGamePad1.dpad_down) {
+                    actuatorMotor.setPower(0.5);
+                }
+                else if (currentGamePad1.dpad_up) {
+                    actuatorMotor.setPower(-0.5);
+                }
+                else {
+                    actuatorMotor.setPower(0);
+                }*/
+
+                /*if (currentGamePad2.right_trigger > 0) {
                     rampMotor.setPower(1);
                 }
                 else if (currentGamePad2.left_trigger > 0) {
@@ -187,26 +236,18 @@ public class mainDrive extends LinearOpMode {
                 }
                 else {
                     rampMotor.setPower(0);
-                }
-                /*if (currentGamePad1.right_trigger > 0) {
-                    // slide.setPower(currentGamePad1.right_trigger);
-                }
-                else if (currentGamePad1.left_trigger > 0) {
-                    slide.setPower(-currentGamePad1.left_trigger);
-                }
-                else {
-                    slide.setPower(0);
                 }*/
 
                 /*if (currentGamePad1.right_bumper) {
-                    boxRotator.setPower(1);
+                    airplaneLauncher.setPower(1);
                 }
                 else if (currentGamePad1.left_bumper) {
-                    boxRotator.setPower(-1);
+                    airplaneLauncher.setPower(-1);
                 }
                 else {
-                    boxRotator.setPower(0);
-                }
+                    airplaneLauncher.setPower(0);
+                }*/
+
                 // button a to toggle slug mode
 
                 if (currentGamePad1.left_bumper && !previousGamePad1.left_bumper) {
@@ -277,7 +318,7 @@ public class mainDrive extends LinearOpMode {
                     slide.setPower(0);
                 }*/
 
-                if (currentGamePad2.dpad_down) {
+                /*if (currentGamePad2.dpad_down) {
                     wheelMotor.setPower(wheelMotorPower);
                 }
                 else if (currentGamePad2.dpad_up) {
@@ -285,9 +326,9 @@ public class mainDrive extends LinearOpMode {
                 }
                 else {
                     wheelMotor.setPower(0);
-                }
+                }*/
 
-                if (currentGamePad2.right_trigger > 0) {
+                /*if (currentGamePad2.right_trigger > 0) {
                     rampMotor.setPower(0.5);
                 }
                 else if (currentGamePad2.right_trigger < 0) {
@@ -295,7 +336,7 @@ public class mainDrive extends LinearOpMode {
                 }
                 else {
                     rampMotor.setPower(0);
-                }
+                }*/
 
                 /*if (currentGamePad1.right_bumper) {
                     boxRotator.setPower(0.5);

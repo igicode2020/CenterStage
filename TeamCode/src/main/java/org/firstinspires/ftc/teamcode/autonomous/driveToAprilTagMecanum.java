@@ -51,7 +51,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
-@Autonomous(name = "April Tag Driving", group = "Autonomous")
+@Autonomous(name = "Drive To AprilTag", group = "Autonomous")
 // @Disabled
 public class driveToAprilTagMecanum extends LinearOpMode {
 
@@ -86,6 +86,8 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         FLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         BLM.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
+        // For prgoramming robot, reverse front right
+        FRM.setDirection(DcMotorEx.Direction.REVERSE);
         FLM.setDirection(DcMotorEx.Direction.REVERSE);
 
         // Setting parameters for imu
@@ -102,7 +104,14 @@ public class driveToAprilTagMecanum extends LinearOpMode {
 
         imu.initialize(parameters);
 
+        runToAprilTag();
+    }
+
+    private void runToAprilTag() {
         initAprilTag();
+        int marginOfError = 1;
+        double xPower = 0.2;
+        double yPower = 0.16;
 
         // Wait for the DS start button to be touched.
         telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
@@ -111,17 +120,21 @@ public class driveToAprilTagMecanum extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             updateValues();
-//      values[0] is the left and right alignment with april tag (x)
-//      values[1] is the distance to april tag (y)
-//      values[2] is the yaw of the robot to the april tag
-            int marginOfError = 1;
+            // values[0] is the left and right alignment with april tag (x)
+            // values[1] is the distance to april tag (y)
+            // values[2] is the yaw of the robot to the april tag
             double desiredX = 0;
             double desiredY = 10;
+            double distanceX;
+            double distanceY;
+
             //move side to side to adjust alignment with april tag (x)
             while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError && opModeIsActive()) {
-                double xPower = 0.1;
                 updateValues();
-                if (values[0] < desiredX){
+                distanceX = Math.abs(desiredX - values[0]);
+                distanceY = Math.abs(desiredY - values[1]);
+
+                if (values[0] > desiredX){
                     FLM.setPower(-xPower);
                     BLM.setPower(xPower);
                     FRM.setPower(xPower);
@@ -133,6 +146,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
                     FRM.setPower(-xPower);
                     BRM.setPower(xPower);
                 }
+
                 telemetry.addData("x", values[0]);
                 telemetry.addData("y", values[1]);
                 telemetry.addData("yaw", values[2]);
@@ -142,22 +156,17 @@ public class driveToAprilTagMecanum extends LinearOpMode {
             BLM.setPower(0);
             FRM.setPower(0);
             BRM.setPower(0);
+
             //move forward or backward to adjust distance from april tag (y)
             while (values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError && opModeIsActive()) {
-                double yPower = 0.2;
                 updateValues();
-                if (values[1] < desiredY){
-                    FLM.setPower(-yPower);
-                    BLM.setPower(-yPower);
-                    FRM.setPower(-yPower);
-                    BRM.setPower(-yPower);
-                }
-                else{
+                if (values[1] > desiredY){
                     FLM.setPower(yPower);
                     BLM.setPower(yPower);
                     FRM.setPower(yPower);
                     BRM.setPower(yPower);
                 }
+
                 telemetry.addData("x", values[0]);
                 telemetry.addData("y", values[1]);
                 telemetry.addData("yaw", values[2]);
@@ -167,33 +176,6 @@ public class driveToAprilTagMecanum extends LinearOpMode {
             BLM.setPower(0);
             FRM.setPower(0);
             BRM.setPower(0);
-//      Potential way to strafe directly to desired target:
-//            while (values[0] >= desiredX + marginOfError || values[0] <= desiredX - marginOfError || values[1] >= desiredY + marginOfError || values[1] <= desiredY - marginOfError && opModeIsActive()) {
-//                updateValues();
-//                //Get direction and account for difference in heading values
-//                double direction = Math.atan2(values[1] + desiredY, values[0]);
-//
-//                //rotation is added to the left side motors of the robot to allow for curved driving
-//                double FLPower = 0.2 * (Math.sin(direction + Math.PI / 4.0));
-//                double FRPower = 0.2 * (Math.sin(direction - Math.PI / 4.0));
-//                double BLPower = 0.2 * (Math.sin(direction - Math.PI / 4.0));
-//                double BRPower = 0.2 * (Math.sin(direction + Math.PI / 4.0));
-//                FRM.setPower(FRPower);
-//                BRM.setPower(BRPower);
-//                FLM.setPower(FLPower);
-//                BLM.setPower(BLPower);
-//                telemetry.addData("x", values[0]);
-//                telemetry.addData("y", values[1]);
-//                telemetry.addData("yaw", values[2]);
-//                telemetry.addData("FRPower", FRPower);
-//                telemetry.addData("BRPower", BRPower);
-//                telemetry.addData("FLPower", FLPower);
-//                telemetry.addData("BLPower", BLPower);
-//                telemetry.addData("direction", direction * 180 / Math.PI);
-//                telemetry.update();
-//            }
-            // Save more CPU resources when camera is no longer needed.
-            visionPortal.close();
         }
     }
 
@@ -236,6 +218,7 @@ public class driveToAprilTagMecanum extends LinearOpMode {
     /**
      * Add telemetry about AprilTag detections.
      */
+
     private void updateValues() {
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();

@@ -78,7 +78,6 @@ public class ConceptTensorFlowObjectDetectionEasy extends LinearOpMode {
             while (opModeIsActive()) {
 
                 telemetryTfod();
-
                 // Push telemetry to the Driver Station.
                 telemetry.update();
 
